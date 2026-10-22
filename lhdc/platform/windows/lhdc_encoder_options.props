@@ -1,0 +1,13 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <LhdcV5EncoderFixedFft Condition="'$(LhdcV5EncoderFixedFft)'==''">0</LhdcV5EncoderFixedFft>
+    <LhdcV4ShiftDefinition Condition="'$(LhdcV4ShiftCountBits)'!=''">LHDC_V4_SHIFT_COUNT_BITS=$(LhdcV4ShiftCountBits);</LhdcV4ShiftDefinition>
+  </PropertyGroup>
+  <ItemDefinitionGroup><ClCompile>
+    <PreprocessorDefinitions>$(LhdcV4ShiftDefinition)LHDC_V5_ENCODER_FIXED_FFT=$(LhdcV5EncoderFixedFft);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+  </ClCompile></ItemDefinitionGroup>
+  <Target Name="ValidateV5EncoderFftOption" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(LhdcV5EncoderFixedFft)'!='0' and '$(LhdcV5EncoderFixedFft)'!='1'" Text="LhdcV5EncoderFixedFft must be 0 or 1" />
+    <Error Condition="'$(LhdcV4ShiftCountBits)'!='' and '$(LhdcV4ShiftCountBits)'!='5' and '$(LhdcV4ShiftCountBits)'!='8'" Text="LhdcV4ShiftCountBits must be empty, 5 or 8" />
+  </Target>
+</Project>

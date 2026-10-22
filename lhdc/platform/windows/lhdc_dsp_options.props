@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="lhdc_resources.props" Condition="'$(LhdcResourcesImported)'!='1'" />
+  <PropertyGroup>
+    <LhdcKissFftIterativeStatic Condition="'$(LhdcKissFftIterativeStatic)'==''">0</LhdcKissFftIterativeStatic>
+  </PropertyGroup>
+  <ItemDefinitionGroup><ClCompile>
+    <PreprocessorDefinitions>LHDC_KISS_FFT_ITERATIVE_STATIC=$(LhdcKissFftIterativeStatic);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+  </ClCompile></ItemDefinitionGroup>
+  <Target Name="ValidateCommonFloatFftOption" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(LhdcKissFftIterativeStatic)'!='0' and '$(LhdcKissFftIterativeStatic)'!='1'" Text="LhdcKissFftIterativeStatic must be 0 or 1" />
+  </Target>
+</Project>

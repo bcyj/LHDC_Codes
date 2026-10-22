@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.19)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  project(audio_math LANGUAGES C)
+endif()
+option(AUDIO_MATH_BUILD_TESTS "Build independent numeric contract tests" OFF)
+option(AUDIO_MATH_FFT_ITERATIVE_STATIC "Use allocation-free iterative FFT scheduling" OFF)
+if(DEFINED LHDC_KISS_FFT_ITERATIVE_STATIC)
+  set(AUDIO_MATH_FFT_ITERATIVE_STATIC ${LHDC_KISS_FFT_ITERATIVE_STATIC})
+endif()
+
+add_library(audio_math_objects OBJECT src/fma_soft.c src/float_exp.c src/float_sine.c
+  src/fft_float32.c src/fft_float32_tables.c)
+target_compile_definitions(audio_math_objects PRIVATE
+  AUDIO_MATH_FFT_ITERATIVE_STATIC=$<BOOL:${AUDIO_MATH_FFT_ITERATIVE_STATIC}>)
+if(WIN32)
+  target_sources(audio_math_objects PRIVATE platform/windows/float_math.c
+    platform/windows/math_tables.c platform/windows/crt_math.c)
+endif()
+target_include_directories(audio_math_objects PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(audio_math_objects PRIVATE c_std_11)
+set_target_properties(audio_math_objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(MSVC)
+  target_compile_options(audio_math_objects PRIVATE /O2 /fp:strict /utf-8
+    $<$<EQUAL:${CMAKE_SIZEOF_VOID_P},4>:/arch:SSE2>)
+else()
+  target_compile_options(audio_math_objects PRIVATE -O2 -ffp-contract=off -fno-fast-math
+    -Wunused-variable -Wunused-function -Wunused-const-variable -Wparentheses -Wuninitialized)
+  if(ANDROID)
+    include(platform/android/Android.cmake)
+    audio_math_android_compile_settings(audio_math_objects)
+  endif()
+endif()
+add_library(audio_math STATIC $<TARGET_OBJECTS:audio_math_objects>)
+add_library(audio_math::math ALIAS audio_math)
+target_include_directories(audio_math PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+if(NOT MSVC)
+  target_link_libraries(audio_math PUBLIC m)
+endif()
+
+if(AUDIO_MATH_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()

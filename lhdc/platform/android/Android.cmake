@@ -1,0 +1,26 @@
+# Android-only target settings. Algorithms and protocol adapters stay platform neutral.
+include_guard(GLOBAL)
+function(lhdc_android_compile_settings target)
+  target_compile_definitions(${target} PRIVATE _GNU_SOURCE=1)
+  lhdc_android_arm32_settings(${target})
+endfunction()
+
+function(lhdc_android_arm32_settings target)
+  if(ANDROID_ABI STREQUAL "armeabi-v7a")
+    target_compile_options(${target} PRIVATE -mthumb -mfpu=vfpv3-d16 -mfloat-abi=softfp)
+  endif()
+endfunction()
+
+function(lhdc_android_encoder_sources)
+  if(ANDROID_ABI STREQUAL "armeabi-v7a")
+    foreach(source IN LISTS ARGN)
+      if(source MATCHES "BT_enc\\.c$")
+        set_source_files_properties(${source} PROPERTIES COMPILE_OPTIONS "-marm;-mfpu=neon")
+      endif()
+    endforeach()
+  endif()
+endfunction()
+
+function(lhdc_android_platform target)
+  target_link_libraries(${target} PUBLIC log)
+endfunction()

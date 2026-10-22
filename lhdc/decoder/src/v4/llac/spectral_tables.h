@@ -1,0 +1,10 @@
+#ifndef LHDC_DECODER_V4_LLAC_SPECTRAL_TABLES_H
+#define LHDC_DECODER_V4_LLAC_SPECTRAL_TABLES_H
+#include "../include/llac_semantic_records.h"
+
+extern const LLACOrderModel lhdc_decoder_v4_llac_spectral_tns_order_models[2];
+extern const LLACReflectionModel lhdc_decoder_v4_llac_spectral_tns_reflection_models[8];
+extern const LLACPairModel lhdc_decoder_v4_llac_spectral_spectral_pair_models[64];
+extern const uint32_t lhdc_decoder_v4_llac_spectral_spectral_context_models[4096];
+extern const float lhdc_decoder_v4_llac_signal_power_fraction[101];
+#endif

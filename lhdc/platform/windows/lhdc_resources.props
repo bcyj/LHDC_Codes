@@ -1,0 +1,18 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <LhdcResourcesImported>1</LhdcResourcesImported>
+    <LhdcDriverResources Condition="'$(LhdcDriverResources)'==''">0</LhdcDriverResources>
+    <LhdcKissFftIterativeStatic Condition="'$(LhdcKissFftIterativeStatic)'==''">$(LhdcDriverResources)</LhdcKissFftIterativeStatic>
+    <LhdcExternalAllocatorOnly Condition="'$(LhdcExternalAllocatorOnly)'==''">$(LhdcDriverResources)</LhdcExternalAllocatorOnly>
+    <LhdcEnableLogging Condition="'$(LhdcEnableLogging)'==''">0</LhdcEnableLogging>
+  </PropertyGroup>
+  <ItemDefinitionGroup><ClCompile>
+    <PreprocessorDefinitions>LHDC_DRIVER_RESOURCES=$(LhdcDriverResources);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <PreprocessorDefinitions Condition="'$(LhdcDriverResources)'=='1'">NDEBUG;LHDC_DRIVER_RESOURCES=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+  </ClCompile></ItemDefinitionGroup>
+  <Target Name="ValidateDriverResources" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(LhdcDriverResources)'!='0' and '$(LhdcDriverResources)'!='1'" Text="LhdcDriverResources must be 0 or 1" />
+    <Error Condition="'$(LhdcDriverResources)'=='1' and ('$(LhdcKissFftIterativeStatic)'!='1' or '$(LhdcExternalAllocatorOnly)'!='1' or '$(LhdcEnableLogging)'!='0')" Text="Driver resources require iterative FFT=1, external allocator=1 and logging=0" />
+    <Error Condition="'$(LhdcDriverResources)'=='1' and '$(Configuration)'!='Release'" Text="Driver resources currently require Release; kernel debug diagnostics are not implemented" />
+  </Target>
+</Project>

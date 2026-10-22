@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="lhdc_resources.props" Condition="'$(LhdcResourcesImported)'!='1'" />
+  <PropertyGroup>
+    <LhdcEnableLogging Condition="'$(LhdcEnableLogging)'==''">0</LhdcEnableLogging>
+  </PropertyGroup>
+  <ItemDefinitionGroup><ClCompile>
+    <PreprocessorDefinitions>LHDC_ENABLE_LOGGING=$(LhdcEnableLogging);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+  </ClCompile></ItemDefinitionGroup>
+  <Target Name="ValidateLoggingOption" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(LhdcEnableLogging)'!='0' and '$(LhdcEnableLogging)'!='1'" Text="LhdcEnableLogging must be 0 or 1" />
+  </Target>
+</Project>

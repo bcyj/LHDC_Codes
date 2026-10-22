@@ -1,0 +1,798 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <ItemGroup>
+    <Filter Include="ar">
+      <UniqueIdentifier>{E85A5366-675B-5C76-A41C-88D88C944830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ar\include">
+      <UniqueIdentifier>{B55FB121-6231-54C2-B4C3-CB41ACDBFD83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ar\include\ar">
+      <UniqueIdentifier>{DE4EAA3B-78B1-598B-B839-D86E3A08DF3A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc">
+      <UniqueIdentifier>{41A931F3-59E6-54F2-80C8-B66CCD138058}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar">
+      <UniqueIdentifier>{D8C9FEC8-BAF0-5D16-988D-8A86CE09C26C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\include">
+      <UniqueIdentifier>{20CBCD8D-592F-520E-9D99-0EEBC3A8A01C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\include\ar">
+      <UniqueIdentifier>{8C03BC52-6804-5736-8A4E-DAFE5029A705}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\include\ar\compat">
+      <UniqueIdentifier>{93D4B855-C338-547F-881A-E9B98C8F5182}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\include\lhdc">
+      <UniqueIdentifier>{54F6D2AB-A6AE-53E3-A44C-E39628AA8CB7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\include\lhdc\ar">
+      <UniqueIdentifier>{DAA3743C-73E9-53B2-AEAA-1E43B67DC45C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src">
+      <UniqueIdentifier>{4443338F-E6E1-5DF3-94A0-8F0FC93AF520}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\common">
+      <UniqueIdentifier>{34CFC133-6BAF-5E96-A847-62FC7033A638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\core">
+      <UniqueIdentifier>{6785A546-466F-5053-A5DC-30FF5F385F80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\core\include">
+      <UniqueIdentifier>{A465E0AD-1484-583D-B7F9-04B31B3B057C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\effects">
+      <UniqueIdentifier>{829AF199-D216-5D3B-B18D-00918BFA6398}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\effects\convolution">
+      <UniqueIdentifier>{7B2517FE-0785-5E80-A406-6DB38824A59E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\effects\hrir">
+      <UniqueIdentifier>{A4DAC07B-565A-50E6-8B72-DE5E8D56847A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\effects\upmix">
+      <UniqueIdentifier>{BA389732-1477-5998-9C6B-6F02F940D1AB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\ar\src\pcm">
+      <UniqueIdentifier>{1CD081CB-0239-595B-A14E-DA95C7C5DD41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common">
+      <UniqueIdentifier>{B18B5188-C6C4-568C-8C70-1BC16B66F904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include">
+      <UniqueIdentifier>{B2E701D3-5BD3-57E0-A49D-5C2C19F0313B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\compat">
+      <UniqueIdentifier>{9DBAC73A-3837-5FD3-A03C-B174618AD3EE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\compat\v4">
+      <UniqueIdentifier>{18E0A6FF-31D4-5F3B-937A-C7E6680977A8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\compat\v5">
+      <UniqueIdentifier>{943607B4-AF52-55C5-BD58-C1E3018004A7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\dsp">
+      <UniqueIdentifier>{44B81A69-F579-5865-9EE2-3750ABD92953}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\lhdc">
+      <UniqueIdentifier>{DBB3B1E9-105D-5A89-90B3-1FF35352A499}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\lhdc\config">
+      <UniqueIdentifier>{6B97402D-CCE4-52A2-9421-7424E786D460}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\include\types">
+      <UniqueIdentifier>{B25A49C4-D18B-5B2F-8537-7AEDB6522BA6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\src">
+      <UniqueIdentifier>{3DCC4F7F-32FA-57D5-8A1F-3EF3BA2899C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\src\buffer">
+      <UniqueIdentifier>{739DD5D6-5301-548A-A1B4-3B9B95027F27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\src\dsp">
+      <UniqueIdentifier>{6EEFA0B1-5621-5FE3-AC33-0A52590CC7DB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\src\memory">
+      <UniqueIdentifier>{AEAEFC78-142A-53E9-8F93-783748632675}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\common\tests">
+      <UniqueIdentifier>{224CFEFB-17C4-50B0-B9B8-A37B7301C750}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder">
+      <UniqueIdentifier>{51398F21-6C6B-51D4-8B87-A5282CC674C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include">
+      <UniqueIdentifier>{798BC834-A0DE-55B7-8332-1711CE83FB33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include\lhdc">
+      <UniqueIdentifier>{6D477BA8-BBF8-5AFB-8403-3B126F6CACB0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include\lhdc\encoder">
+      <UniqueIdentifier>{EC0F4B3E-73D4-5E56-AF10-1A9F0F27E420}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include\lhdc\encoder\common">
+      <UniqueIdentifier>{7742E79A-F023-534F-897D-8B571E85C38E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include\lhdc\encoder\v4">
+      <UniqueIdentifier>{532EA115-83EE-5EA5-B08B-E75FD6A54FE5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\include\lhdc\encoder\v5">
+      <UniqueIdentifier>{8E40E551-DD63-514A-88B8-3F97B335BD87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src">
+      <UniqueIdentifier>{CDAAAD9E-F588-5E94-B86B-75CA1DC3852E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\compat">
+      <UniqueIdentifier>{39F2960E-B06E-57D0-9F66-64CDC9B16355}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\compat\v4">
+      <UniqueIdentifier>{0E3E68FB-A37D-51A3-A94D-BE471204E5BD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\compat\v5">
+      <UniqueIdentifier>{FB5A62F5-4331-5529-9884-7396CF1CCD40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4">
+      <UniqueIdentifier>{03E2BC2F-87A2-55EF-93EE-3E4910121154}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\codec">
+      <UniqueIdentifier>{D07A7C6E-0B34-5A10-B7F8-A9216B31E66F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\include">
+      <UniqueIdentifier>{FF6E5EF1-240F-59E3-B2C4-A25BB0838A22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\include\codec">
+      <UniqueIdentifier>{AC4F4D75-7235-5925-A184-E8FF2C526682}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\include\llac">
+      <UniqueIdentifier>{F3091AEF-74B4-505E-8BD6-5A73858FAD43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\include\types">
+      <UniqueIdentifier>{D98DFA35-D228-5B48-89D5-5DA6ABD97FA8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v4\llac">
+      <UniqueIdentifier>{BDA95D48-DE9D-58CF-98A0-C32223355A65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5">
+      <UniqueIdentifier>{222D1945-0933-51B2-BA45-FD5882796054}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5\codec">
+      <UniqueIdentifier>{1AF2E48B-5DC9-538D-9877-81AC29C73929}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5\codec\tables">
+      <UniqueIdentifier>{B3CD0632-1BD6-5791-BB89-451F80239925}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5\include">
+      <UniqueIdentifier>{362CC3E7-9291-5F43-B504-49017477F276}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5\include\codec">
+      <UniqueIdentifier>{42554EFB-B3FE-5E42-BC0A-369BCDB478EE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\encoder\src\v5\include\types">
+      <UniqueIdentifier>{59A035FF-D799-56A2-95FC-5B009AAE0165}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform">
+      <UniqueIdentifier>{80C2B651-644A-5880-A3B5-8C23E15CFCC4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\android">
+      <UniqueIdentifier>{57761266-4D52-5980-A631-C0AEE6274F45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\android\include">
+      <UniqueIdentifier>{49E8CE56-D9C4-558B-A6B8-1056AB542AD5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\common">
+      <UniqueIdentifier>{C66F2054-2A5E-5351-B013-9F6285C75CCD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\generic">
+      <UniqueIdentifier>{3CD134C1-5AC6-55F2-B034-7B0E5B22F98C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\generic\include">
+      <UniqueIdentifier>{C566CB07-A27B-5AAF-B7CB-0E35CB1C15AE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\gnu">
+      <UniqueIdentifier>{87E699AB-CDAA-5028-BEA8-73AD5EEC9EF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\gnu\include">
+      <UniqueIdentifier>{9F38C018-C3D6-5462-9529-85F4D80E4428}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\include">
+      <UniqueIdentifier>{994C89E9-9340-560B-8B94-4A8FAD484647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\windows">
+      <UniqueIdentifier>{DFDE7DFA-E692-5F95-B4FE-7275CC16166F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\windows\include">
+      <UniqueIdentifier>{1986B131-E66B-5732-9974-901FE8DCE6B8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\windows\kernel">
+      <UniqueIdentifier>{59A1E8B1-ECE0-5AB7-A139-0451F777AE2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\windows\kernel\include">
+      <UniqueIdentifier>{B3D520A6-6264-5D28-B5C2-ED6FCA2541FD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\x86">
+      <UniqueIdentifier>{30329075-2CA7-5E7B-8DD9-CA9F9379094C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lhdc\platform\x86\include">
+      <UniqueIdentifier>{BF759640-D1C4-5FA5-BA98-44479C1042FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{EFFF6615-41E4-5AA9-A57F-89BEAB8B6809}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include">
+      <UniqueIdentifier>{2ED2FA4C-13A0-5290-A3E2-FF76893F8D1F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math">
+      <UniqueIdentifier>{3DAE88FE-A0C5-590B-A90D-25604B3F87B3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\platform">
+      <UniqueIdentifier>{9836054A-AD94-54DE-9239-4ABF40CAA67C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\platform\android">
+      <UniqueIdentifier>{57E0D86D-CB14-560D-9707-66276EF2799E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\platform\arm">
+      <UniqueIdentifier>{81ECBF17-66CD-5E4E-A1C1-65D6C050923F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\platform\windows">
+      <UniqueIdentifier>{60A3485A-AA44-5E03-BF99-857070BEF296}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\platform\x86">
+      <UniqueIdentifier>{8CA71055-DDAE-5B45-BAE8-60E4EFE94A34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\include\audio_math\types">
+      <UniqueIdentifier>{D322FAE7-C3B5-5E78-8636-7C96653DC667}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\lhdc\common\src\dsp\fft_float32.c">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\dsp\dct4_float32.c">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\dsp\fft_fixed32.c">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\dsp\dct4_float32_tables.c">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\pcm\pcm.c">
+      <Filter>lhdc\ar\src\pcm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\common\vbap_angle.c">
+      <Filter>lhdc\ar\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\common\gain_smoothing.c">
+      <Filter>lhdc\ar\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\effects\hrir\direction_tables.c">
+      <Filter>lhdc\ar\src\effects\hrir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\effects\convolution\abir_tables.c">
+      <Filter>lhdc\ar\src\effects\convolution</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\effects\upmix\upmix_tables.c">
+      <Filter>lhdc\ar\src\effects\upmix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\core\parameter_defaults.c">
+      <Filter>lhdc\ar\src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\platform\windows\windows_codec_math.c">
+      <Filter>lhdc\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\platform\windows\windows_codec_math_tables.c">
+      <Filter>lhdc\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\platform\windows\windows_sine.c">
+      <Filter>lhdc\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\platform\common\silent_log.c">
+      <Filter>lhdc\platform\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\memory\workspace.c">
+      <Filter>lhdc\common\src\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\dsp\adsq_tables.c">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\platform\common\memory.c">
+      <Filter>lhdc\platform\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\common\src\buffer\cirbuf.c">
+      <Filter>lhdc\common\src\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lhdc\ar\src\pcm\pcm_backend.c">
+      <Filter>lhdc\ar\src\pcm</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\ar.h">
+      <Filter>lhdc\ar\include\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\compat\legacy.h">
+      <Filter>lhdc\ar\include\ar\compat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\compat\v4.h">
+      <Filter>lhdc\ar\include\ar\compat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\compat\v5.h">
+      <Filter>lhdc\ar\include\ar\compat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\lhdc_pcm.h">
+      <Filter>lhdc\ar\include\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\parameters.h">
+      <Filter>lhdc\ar\include\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\ar\types.h">
+      <Filter>lhdc\ar\include\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\include\lhdc\ar\pcm_backend.h">
+      <Filter>lhdc\ar\include\lhdc\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\common\gain_smoothing.h">
+      <Filter>lhdc\ar\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\common\vbap_angle.h">
+      <Filter>lhdc\ar\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_interfaces.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_internal.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_math_constants.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_numeric_policy.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_tables.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_workspace_views.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\pcm_format.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\parameter_defaults.h">
+      <Filter>lhdc\ar\src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\effects\hrir\upconvolution.h">
+      <Filter>lhdc\ar\src\effects\hrir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\effects\upmix\upmix_library.h">
+      <Filter>lhdc\ar\src\effects\upmix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\compat\v4\lhdc_v4_constants.h">
+      <Filter>lhdc\common\include\compat\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\compat\v4\lhdc_v4_math.h">
+      <Filter>lhdc\common\include\compat\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\compat\v4\lhdc_v4_numeric_policy.h">
+      <Filter>lhdc\common\include\compat\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\compat\v5\lhdc_v5_constants.h">
+      <Filter>lhdc\common\include\compat\v5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\adsq_tables.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\dct4_float32.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\fast_math_constants.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\fft_fixed32.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\fft_float32.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\dsp\float_compat.h">
+      <Filter>lhdc\common\include\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc\config\components.h">
+      <Filter>lhdc\common\include\lhdc\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc\config\status_v5.h">
+      <Filter>lhdc\common\include\lhdc\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_alignment.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_cirbuf.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_data_namespace.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_log.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_memory.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_resources.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\lhdc_version.h">
+      <Filter>lhdc\common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\types\lhdc_base_types.h">
+      <Filter>lhdc\common\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\types\lhdc_dsp_types.h">
+      <Filter>lhdc\common\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\types\llac_scalar_types.h">
+      <Filter>lhdc\common\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\include\types\llac_side_types.h">
+      <Filter>lhdc\common\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\src\dsp\dct4_float32_tables.h">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\src\dsp\fft_fixed32.h">
+      <Filter>lhdc\common\src\dsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\src\memory\workspace.h">
+      <Filter>lhdc\common\src\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\common\tests\trig_host_reference.h">
+      <Filter>lhdc\common\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\common\lhdc_bt_ext.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\lhdc_bt.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v4\lhdc_api.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v4\lhdcBT.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v4\llac_enc_api.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v4\llac_status.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v4\quality_presets.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v5\lhdcv5_api.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v5\lhdcv5BT.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\include\lhdc\encoder\v5\lhdcv5BT_ext_func.h">
+      <Filter>lhdc\encoder\include\lhdc\encoder\v5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\compat\v4\ar_disabled.h">
+      <Filter>lhdc\encoder\src\compat\v4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\compat\v5\ar_disabled.h">
+      <Filter>lhdc\encoder\src\compat\v5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\codec\encoder_tables.h">
+      <Filter>lhdc\encoder\src\v4\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\codec\frame_encode.h">
+      <Filter>lhdc\encoder\src\v4\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\codec\lzh_encode.h">
+      <Filter>lhdc\encoder\src\v4\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\codec_api.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\codec_data.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\codec_internal.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\encoder.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\integer_ops.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\lpc_analysis.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\resample_state.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\scalar.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\codec\v4_pcm.h">
+      <Filter>lhdc\encoder\src\v4\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\encoder_internal.h">
+      <Filter>lhdc\encoder\src\v4\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\llac\llac_code_types.h">
+      <Filter>lhdc\encoder\src\v4\include\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\llac\llac_const.h">
+      <Filter>lhdc\encoder\src\v4\include\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\types\cirbuf.h">
+      <Filter>lhdc\encoder\src\v4\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\types\lhdc_base_types.h">
+      <Filter>lhdc\encoder\src\v4\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\types\lhdc_native_types.h">
+      <Filter>lhdc\encoder\src\v4\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\llac\bitstream_encode.h">
+      <Filter>lhdc\encoder\src\v4\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\llac\fft_adapter.h">
+      <Filter>lhdc\encoder\src\v4\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\llac\gain.h">
+      <Filter>lhdc\encoder\src\v4\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\llac\spectral_analysis_tables.h">
+      <Filter>lhdc\encoder\src\v4\llac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\codec\frame_header.h">
+      <Filter>lhdc\encoder\src\v5\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\codec\mdct_tables.h">
+      <Filter>lhdc\encoder\src\v5\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\codec\spectral_shaping.h">
+      <Filter>lhdc\encoder\src\v5\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\codec\tables\native_tables.h">
+      <Filter>lhdc\encoder\src\v5\codec\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\bit_operations.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\bit_writer.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\codec_api.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\codec_data.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\codec_internal.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\fast_math.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\lhdc_v5_fft_options.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\lhdcv5_workspace_types.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\scalar.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\v5_extended.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\codec\v5_pcm.h">
+      <Filter>lhdc\encoder\src\v5\include\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\encoder_internal.h">
+      <Filter>lhdc\encoder\src\v5\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\types\cirbuf.h">
+      <Filter>lhdc\encoder\src\v5\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\types\lhdc_base_types.h">
+      <Filter>lhdc\encoder\src\v5\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\types\lhdc_bit_writer_types.h">
+      <Filter>lhdc\encoder\src\v5\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v5\include\types\lhdc_native_types.h">
+      <Filter>lhdc\encoder\src\v5\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\android\include\lhdc_android_abi.h">
+      <Filter>lhdc\platform\android\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\android\include\lhdc_android_log.h">
+      <Filter>lhdc\platform\android\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\android\include\lhdc_android_numeric_policy.h">
+      <Filter>lhdc\platform\android\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\generic\include\lhdc_generic_abi.h">
+      <Filter>lhdc\platform\generic\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\generic\include\lhdc_generic_numeric_policy.h">
+      <Filter>lhdc\platform\generic\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\gnu\include\lhdc_cirbuf_exports.h">
+      <Filter>lhdc\platform\gnu\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\include\lhdc_numeric_policy.h">
+      <Filter>lhdc\platform\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\include\lhdc_platform.h">
+      <Filter>lhdc\platform\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\include\lhdc_print.h">
+      <Filter>lhdc\platform\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_msvc_intrinsics.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_abi.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_exp_log.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_float_math_constants.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_math_tables.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_numeric_policy.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_print.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\include\lhdc_windows_sine.h">
+      <Filter>lhdc\platform\windows\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\windows\kernel\include\lhdc_kernel_memory.h">
+      <Filter>lhdc\platform\windows\kernel\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\x86\include\lhdc_x86_attack.h">
+      <Filter>lhdc\platform\x86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\platform\x86\include\lhdc_x86_smoothing.h">
+      <Filter>lhdc\platform\x86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\bits.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\byte_order.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\compiler.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\constants.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\fft_float32.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\fft_float32_tables.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_convert.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_exp.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_log.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_mdct.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_properties.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_remainder.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_rounding.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_scaling.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_sine.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_sqrt.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_trig.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_trig_q31.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\float_window.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\fma_native.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\fma_soft.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\integer.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\math.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\numeric_bits.h">
+      <Filter>math\include\audio_math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\android\fma.h">
+      <Filter>math\include\audio_math\platform\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\android\math.h">
+      <Filter>math\include\audio_math\platform\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\fma.h">
+      <Filter>math\include\audio_math\platform\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\properties.h">
+      <Filter>math\include\audio_math\platform\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\rounding.h">
+      <Filter>math\include\audio_math\platform\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\sqrt.h">
+      <Filter>math\include\audio_math\platform\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\fma.h">
+      <Filter>math\include\audio_math\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\constants.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\crt.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\exp_log.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\remainder.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\tables.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\trig.h">
+      <Filter>math\include\audio_math\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\platform\x86\sqrt.h">
+      <Filter>math\include\audio_math\platform\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\math\include\audio_math\types\fma.h">
+      <Filter>math\include\audio_math\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\ar\include\ar\backend.h">
+      <Filter>ar\include\ar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\ar\include\ar\pcm.h">
+      <Filter>ar\include\ar</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

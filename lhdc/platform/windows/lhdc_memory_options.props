@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="lhdc_resources.props" Condition="'$(LhdcResourcesImported)'!='1'" />
+  <PropertyGroup>
+    <LhdcExternalAllocatorOnly Condition="'$(LhdcExternalAllocatorOnly)'==''">0</LhdcExternalAllocatorOnly>
+  </PropertyGroup>
+  <ItemDefinitionGroup><ClCompile>
+    <PreprocessorDefinitions>LHDC_EXTERNAL_ALLOCATOR_ONLY=$(LhdcExternalAllocatorOnly);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+  </ClCompile></ItemDefinitionGroup>
+  <Target Name="ValidateMemoryAllocatorOption" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(LhdcExternalAllocatorOnly)'!='0' and '$(LhdcExternalAllocatorOnly)'!='1'" Text="LhdcExternalAllocatorOnly must be 0 or 1" />
+  </Target>
+</Project>

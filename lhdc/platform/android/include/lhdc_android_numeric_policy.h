@@ -1,0 +1,17 @@
+#ifndef LHDC_ANDROID_NUMERIC_POLICY_H
+#define LHDC_ANDROID_NUMERIC_POLICY_H
+
+/* Only ARM32/ARM64 Bionic numeric boundaries are verified; other Android ABIs use the generic path. */
+#if defined(__arm__) || defined(__aarch64__)
+#define LHDC_PLATFORM_FIXED_DSP_TABLES 1
+#define LHDC_PLATFORM_CALIBRATED_FLOAT_MATH 1
+#define LHDC_PLATFORM_LLAC_GAIN_COMMON 1
+#else
+#define LHDC_PLATFORM_FIXED_DSP_TABLES 0
+#define LHDC_PLATFORM_CALIBRATED_FLOAT_MATH 0
+#define LHDC_PLATFORM_LLAC_GAIN_COMMON 0
+#endif
+#define LHDC_PLATFORM_LLAC_GAIN_UCRT64 0
+#define LHDC_PLATFORM_VBAP_15_5_THRESHOLD_F32 0.267238379f
+
+#endif

@@ -1,0 +1,6 @@
+#ifndef LHDC_COMPONENTS_H
+#define LHDC_COMPONENTS_H
+#ifndef LHDC_ENCODER_WITH_AR
+#define LHDC_ENCODER_WITH_AR 1
+#endif
+#endif

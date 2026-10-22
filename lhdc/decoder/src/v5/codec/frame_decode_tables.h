@@ -1,0 +1,5 @@
+#ifndef LHDC_DECODER_SRC_V5_CODEC_FRAME_DECODE_TABLES_H
+#define LHDC_DECODER_SRC_V5_CODEC_FRAME_DECODE_TABLES_H
+
+extern const unsigned char lhdc_decoder_v5_decoder_bitstream_decode_table_0[256];
+#endif
