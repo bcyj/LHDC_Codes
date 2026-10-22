@@ -7,6 +7,7 @@ This library contains V4/V5 encoders, V4/V5 decoders, an AR PCM effects processo
 I developed this library for my other open-source A2DP driver project, drawing extensively on AOSP Bluetooth codec implementations and WillyBilly06's LHDCv5 library. It has been tested with multiple headphones. LHDC v1 is currently unsupported because I could not find a compatible headset; support may be added later. Gemini and ChatGPT were used extensively to generate code. All documentation and comments were generated and translated with Gemini and ChatGPT; I plan to proofread them manually when time permits.
 
 - [Features](docs/features.md): capabilities, public interfaces, formats, and limitations.
+- [V2–V5 and LLAC comparison](docs/codec-version-comparison.md): version mappings, algorithms, formats, bitrate control, and compatibility.
 - [Module sizes](docs/module-sizes.md): source and compiled sizes for V4/V5 encoding, decoding, AR, and mathematics across four ABIs.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): reference scope, copyrights, and terms for AOSP, KISS FFT, and LZH-related projects.
 - [Build and integration](docs/build-and-integration.md): CMake, MSBuild, Android NDK, and driver memory integration.

@@ -9,6 +9,7 @@
 此库本质上是我为我另一个开源A2DP驱动项目所制造的，大量参考了AOSP中相关的蓝牙编码算法以及WillyBilly06的LHDCv5库，在多个耳机中测试通过，由于找不到LHDC v1的耳机，所以不支持v1, 以后会补上。过程中大量使用Gemini和ChatGPT生成代码，文档、注释全部用Gemini和ChatGPT生成和翻译，等我有时间再手动校对。
 
 - [功能说明](docs/zh-CN/features.md)：组件能力、公开接口、格式及使用限制。
+- [V2～V5 与 LLAC 对比](docs/zh-CN/codec-version-comparison.md)：版本映射、算法、格式、码率控制及兼容限制。
 - [模块体积统计](docs/zh-CN/module-sizes.md)：V4/V5 编码、解码、AR 和数学库的四 ABI 源码及编译体积。
 - [开源引用与许可](THIRD_PARTY_NOTICES.zh-CN.md)：AOSP、KISS FFT 与 LZH 相关实现及参考项目的适用范围、版权和条款。
 - [构建与接入](docs/zh-CN/build-and-integration.md)：CMake、MSBuild、Android NDK 和驱动内存适配。

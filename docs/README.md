@@ -3,6 +3,7 @@
 English | [Simplified Chinese](zh-CN/README.md)
 
 - [Features and interfaces](features.md)
+- [LHDC V2–V5 and LLAC comparison](codec-version-comparison.md)
 - [Build and integration](build-and-integration.md)
 - [Module sizes](module-sizes.md)
 - [Source translation and validation](source-language.md)
