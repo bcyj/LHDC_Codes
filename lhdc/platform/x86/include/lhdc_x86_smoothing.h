@@ -3,7 +3,8 @@
 
 #include <string.h>
 
-#if defined(_MSC_VER) && (defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
+#if defined(_MSC_VER) &&                                                                          \
+    (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86_FP) && _M_IX86_FP >= 2))
 #define LHDC_X86_SMOOTH_121 1
 
 /* Smooth in place with three-point [1, 2, 1]/4 weights and repeated endpoints.

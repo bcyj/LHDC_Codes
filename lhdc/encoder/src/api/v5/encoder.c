@@ -15,8 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Read-only initial bitrate tables: 48/96/192 kHz share one, while 44.1 kHz remains separate.
- * Instances own independent writable copies after initialization; runtime changes never write back here. */
+/* Read-only initial values for per-instance bitrate tables. 48/96/192 kHz share one table and
+ * 44.1 kHz retains a separate table. Each initialized instance owns a writable copy; runtime
+ * adjustments never modify these values. */
 static const int32_t v5_default_bitrate_kbps[10] = {64,  128, 192, 256,  320,
                                                     400, 500, 900, 1000, 2000};
 static const int32_t v5_44100_bitrate_kbps[10] = {64,  128, 192, 240,  320,
@@ -246,22 +247,30 @@ static int32_t encoder_config_error(const char *function, const char *format, ui
 /* Convert interleaved PCM to stereo integer planes; 32-bit containers retain the high 24 bits. */
 static void unpack_encoder_pcm(const uint8_t *in, uint32_t bits_per_sample,
                                uint32_t samples_per_frame, int32_t *in_tmp) {
-    for (uint32_t i = 0; i < samples_per_frame; ++i) {
-        for (uint32_t ch = 0; ch < 2; ++ch) {
-            uint32_t sample = i * 2 + ch;
-            int32_t value;
-            if (bits_per_sample == 16) {
-                uint32_t pcm_s16 = audio_math_read_le16(in + sample * 2);
-                value = audio_math_shift_right_i32(audio_math_int32_from_bits(pcm_s16 << 16), 16);
-            } else if (bits_per_sample == 32) {
-                value = audio_math_shift_right_i32(
-                    audio_math_int32_from_bits(audio_math_read_le32(in + sample * 4)), 8);
-            } else {
-                const uint8_t *src = in + sample * 3;
-                value = audio_math_shift_right_i32(
-                    audio_math_int32_from_bits(audio_math_read_le24(src) << 8), 8);
-            }
-            in_tmp[ch * samples_per_frame + i] = value;
+    int32_t *ch0 = in_tmp;
+    int32_t *ch1 = in_tmp + samples_per_frame;
+
+    if (bits_per_sample == 24) {
+        for (uint32_t i = 0; i < samples_per_frame; ++i) {
+            const uint8_t *src = in + i * 6;
+            uint32_t l_bits = (uint32_t)src[0] | ((uint32_t)src[1] << 8) | ((uint32_t)src[2] << 16);
+            uint32_t r_bits = (uint32_t)src[3] | ((uint32_t)src[4] << 8) | ((uint32_t)src[5] << 16);
+            ch0[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(l_bits << 8), 8);
+            ch1[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(r_bits << 8), 8);
+        }
+    } else if (bits_per_sample == 16) {
+        for (uint32_t i = 0; i < samples_per_frame; ++i) {
+            uint32_t pcm_s16_l = audio_math_read_le16(in + i * 4);
+            uint32_t pcm_s16_r = audio_math_read_le16(in + i * 4 + 2);
+            ch0[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(pcm_s16_l << 16), 16);
+            ch1[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(pcm_s16_r << 16), 16);
+        }
+    } else if (bits_per_sample == 32) {
+        for (uint32_t i = 0; i < samples_per_frame; ++i) {
+            uint32_t pcm_s32_l = audio_math_read_le32(in + i * 8);
+            uint32_t pcm_s32_r = audio_math_read_le32(in + i * 8 + 4);
+            ch0[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(pcm_s32_l), 8);
+            ch1[i] = audio_math_shift_right_i32(audio_math_int32_from_bits(pcm_s32_r), 8);
         }
     }
 }

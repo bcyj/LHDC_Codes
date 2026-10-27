@@ -5,6 +5,7 @@
 - [功能说明](features.md)
 - [LHDC V2～V5 与 LLAC 对比](codec-version-comparison.md)
 - [构建与接入](build-and-integration.md)
+- [性能优化说明](performance-optimizations.md)
 - [模块体积统计](module-sizes.md)
 - [源码翻译与验证](source-language.md)
 - [开源引用与许可](../../THIRD_PARTY_NOTICES.zh-CN.md)

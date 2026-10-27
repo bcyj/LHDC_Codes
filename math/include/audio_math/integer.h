@@ -32,10 +32,9 @@ static AUDIO_MATH_FORCE_INLINE uint64_t audio_math_multiply_wrap_u64(uint64_t a,
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
     uint32_t a_low = (uint32_t)a;
     uint32_t b_low = (uint32_t)b;
-    uint64_t low = (uint64_t)a_low * b_low;
-    uint32_t high = (uint32_t)(low >> 32);
-    high += (uint32_t)(a >> 32) * b_low;
-    high += a_low * (uint32_t)(b >> 32);
+    uint64_t low = __emulu(a_low, b_low);
+    uint32_t high =
+        (uint32_t)(low >> 32) + (uint32_t)(a >> 32) * b_low + a_low * (uint32_t)(b >> 32);
     return ((uint64_t)high << 32) | (uint32_t)low;
 #else
     return a * b;

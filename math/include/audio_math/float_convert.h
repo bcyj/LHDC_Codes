@@ -6,7 +6,7 @@
 #include <limits.h>
 
 /* Extract the integer magnitude of a finite binary32 value.
- * Callers guarantee uint32 representability; magnitudes below one yield zero, with shifts in 0..23. */
+ * The caller guarantees that it fits in uint32; values below 1 produce zero and shifts are 0..23. */
 static inline uint32_t audio_math_truncate_magnitude_f32_bits(uint32_t bits) {
     unsigned exponent = (bits >> 23) & 0xffu;
     if (exponent < 127)
@@ -17,9 +17,10 @@ static inline uint32_t audio_math_truncate_magnitude_f32_bits(uint32_t bits) {
                               : significand << (integer_bits - 23);
 }
 
-/* Extract integer magnitude from two words of finite binary64.
- * Callers guarantee uint32 representability; split-word shifts avoid Win32 kernel CRT references.
- * Maximum valid exponent is 31; nonzero paths shift left 1..11 or the low word right 21..31. */
+/* Extract the integer magnitude from the two words of a finite binary64 value.
+ * The caller guarantees that it fits in uint32. Split-word shifts avoid CRT references in
+ * Win32 kernel builds. The maximum valid exponent is 31; nonzero paths shift the high word
+ * left by 1..11 and the low word right by 21..31. */
 static inline uint32_t audio_math_truncate_magnitude_f64_words(uint32_t high, uint32_t low) {
     unsigned exponent = (high >> 20) & 0x7ffu;
     if (exponent < 1023)
@@ -31,8 +32,8 @@ static inline uint32_t audio_math_truncate_magnitude_f64_words(uint32_t high, ui
                : (significand_high << (integer_bits - 20)) | (low >> (52 - integer_bits));
 }
 
-/* Truncate binary32 fields to int32, saturating overflow and zeroing NaN.
- * The integer part uses at most 31 bits; only bounded uint32 shifts are needed. */
+/* Truncate binary32 fields toward zero to int32, saturating overflow and mapping NaN to zero.
+ * The valid integer part is at most 31 bits and uses only bounded uint32 shifts. */
 static inline int32_t audio_math_truncate_sat_i32_f32_soft(float value) {
     uint32_t bits = audio_math_float32_bits(value);
     uint32_t magnitude = bits & AUDIO_MATH_FLOAT32_MAGNITUDE_BITS;
@@ -55,8 +56,8 @@ static inline uint32_t audio_math_truncate_sat_u32_f32_soft(float value) {
     return audio_math_truncate_magnitude_f32_bits(bits);
 }
 
-/* Truncate binary64 fields to int32, saturating overflow and zeroing NaN.
- * Split into two 32-bit words to avoid x86 CRT helpers for variable uint64 shifts. */
+/* Truncate binary64 fields toward zero to int32, saturating overflow and mapping NaN to zero.
+ * Two 32-bit words avoid x86 CRT helpers for variable uint64 shifts. */
 static inline int32_t audio_math_truncate_sat_i32_f64_soft(double value) {
     uint64_t bits = audio_math_float64_bits(value);
     uint32_t high = (uint32_t)(bits >> 32);
@@ -103,9 +104,9 @@ static inline uint32_t audio_math_truncate_u32_f32(float value) {
 #endif
 }
 
-/* Truncate finite binary32 whose integer part fits int64 toward zero.
- * Win32 kernel builds construct magnitude/two's complement with two 32-bit words and shifts of at most 31,
- * avoiding runtime helpers for float-to-integer conversion and variable 64-bit shifts. */
+/* Truncate a finite binary32 value whose integer part fits in int64 toward zero.
+ * Win32 kernel builds form magnitude and two's complement from two 32-bit words with shifts
+ * no larger than 31, avoiding runtime helpers for float-to-integer and variable 64-bit shifts. */
 static inline int64_t audio_math_truncate_i64_f32(float value) {
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
     uint32_t bits = audio_math_float32_bits(value);
@@ -144,21 +145,15 @@ static inline int32_t audio_math_truncate_sat_i32_f64(double value) {
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
     /* Handle directly convertible values first; bit comparisons retain NaN-zeroing and endpoint saturation. */
     uint64_t bits = audio_math_float64_bits_sse2(value);
+#else
+    uint64_t bits = audio_math_float64_bits(value);
+#endif
     uint64_t magnitude = bits & AUDIO_MATH_FLOAT64_MAGNITUDE_BITS;
     if (magnitude < AUDIO_MATH_FLOAT64_POW2_31_BITS)
         return audio_math_truncate_i32_f64(value);
     if (magnitude > AUDIO_MATH_FLOAT64_INFINITY_BITS)
         return 0;
     return bits & AUDIO_MATH_FLOAT64_SIGN_BITS ? INT32_MIN : INT32_MAX;
-#else
-    if (audio_math_is_nan_f64(value))
-        return 0;
-    if (value >= AUDIO_MATH_POW2_31_F64)
-        return INT32_MAX;
-    if (value <= -AUDIO_MATH_POW2_31_F64)
-        return INT32_MIN;
-    return audio_math_truncate_i32_f64(value);
-#endif
 }
 
 /* Truncate float toward zero with int32 saturation; NaN yields zero. */
@@ -170,8 +165,15 @@ static inline int32_t audio_math_truncate_sat_i32_f32(float value) {
     uint32_t bits = audio_math_float32_bits(value);
 #endif
     uint32_t magnitude = bits & AUDIO_MATH_FLOAT32_MAGNITUDE_BITS;
-    if (magnitude < AUDIO_MATH_FLOAT32_POW2_31_BITS)
+    if (magnitude < AUDIO_MATH_FLOAT32_POW2_31_BITS) {
+#if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
+        uint32_t integer = audio_math_truncate_magnitude_f32_bits(bits);
+        return audio_math_int32_from_bits(bits & AUDIO_MATH_FLOAT32_SIGN_BITS ? 0u - integer
+                                                                              : integer);
+#else
         return audio_math_truncate_i32_f32(value);
+#endif
+    }
     if (magnitude > AUDIO_MATH_FLOAT32_INFINITY_BITS)
         return 0;
     return bits & AUDIO_MATH_FLOAT32_SIGN_BITS ? INT32_MIN : INT32_MAX;

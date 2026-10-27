@@ -42,8 +42,9 @@ static void v4i_llac_arithmetic_encoder_shift_range_byte(RangeEncoder *st, uint3
 }
 
 /* Narrow a 24-bit arithmetic interval using Q10 cumulative probabilities, then normalize bytewise. */
-static void v4i_llac_arithmetic_encoder_encode_symbol(RangeEncoder *st, const LLAC_INT *cumfreq,
-                                                      LLAC_INT symbol) {
+static inline void v4i_llac_arithmetic_encoder_encode_symbol(RangeEncoder *st,
+                                                             const LLAC_INT *cumfreq,
+                                                             LLAC_INT symbol) {
     uint32_t unit = st->range >> 10;
     st->low += (uint32_t)cumfreq[symbol] * unit;
     st->range = (uint32_t)(cumfreq[symbol + 1] - cumfreq[symbol]) * unit;
@@ -147,8 +148,7 @@ void v4f_llac_encode_spectral_symbols(LLAC_UINT8 *bytes, LLAC_INT bp_side, LLAC_
                 lsb1 = bit1;
                 lsb2 = bit2;
             } else {
-                v4i_llac_write_side_bit(bytes, &bp_side, &mask_side, bit1);
-                v4i_llac_write_side_bit(bytes, &bp_side, &mask_side, bit2);
+                v4i_llac_write_side_2bits(bytes, &bp_side, &mask_side, bit1, bit2);
             }
         }
         LLAC_INT lev1 = level > 0 ? level : 0;

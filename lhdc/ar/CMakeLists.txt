@@ -2,11 +2,15 @@ foreach(v v4 v5)
   lhdc_sources(sources ar ${v})
   add_library(lhdc_ar_${v}_objects OBJECT ${sources})
   lhdc_version_objects(lhdc_ar_${v}_objects ${v})
+  target_compile_definitions(lhdc_ar_${v}_objects PRIVATE
+    LHDC_AR_HIGH_PERFORMANCE_SSE=$<BOOL:${LHDC_AR_HIGH_PERFORMANCE_SSE}>)
 endforeach()
 add_library(lhdc_ar_common_objects OBJECT src/pcm/pcm.c src/pcm/pcm_backend.c
   src/common/vbap_angle.c src/common/gain_smoothing.c src/effects/hrir/direction_tables.c
   src/effects/convolution/abir_tables.c src/effects/upmix/upmix_tables.c src/core/parameter_defaults.c)
 lhdc_compile_settings(lhdc_ar_common_objects)
+target_compile_definitions(lhdc_ar_common_objects PRIVATE
+  LHDC_AR_HIGH_PERFORMANCE_SSE=$<BOOL:${LHDC_AR_HIGH_PERFORMANCE_SSE}>)
 set_target_properties(lhdc_ar_common_objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(lhdc_ar_common_objects PRIVATE include "${LHDC_ROOT}/../ar/include")
 add_library(lhdc_ar STATIC $<TARGET_OBJECTS:lhdc_ar_v4_objects>

@@ -24,15 +24,43 @@ int rice_decode(bit_buf_t *bit_rb, int ns, unsigned lpc_m, int *rd_i) {
             while (zeros < 10) {
                 if (!bit_rb->rb && !rice_fill(bit_rb))
                     return LHDC_DEC_NO_OUTPUT;
-                if (bit_rb->db & 0x80000000u)
+                /* ARM64 benefits when the common zero quotient bypasses CLZ. */
+#if defined(__aarch64__) || defined(_M_ARM64)
+                if (bit_rb->db & UINT32_C(0x80000000)) {
+                    bit_rb->db <<= 1;
+                    --bit_rb->rb;
                     break;
-                bit_rb->db <<= 1;
-                --bit_rb->rb;
-                ++zeros;
+                }
+#endif
+                unsigned clz = audio_math_count_leading_zeros32(bit_rb->db);
+                unsigned available = bit_rb->rb;
+                unsigned needed = 10 - zeros;
+                if (clz < available) {
+                    if (clz < needed) {
+                        bit_rb->db <<= (clz + 1);
+                        bit_rb->rb -= (clz + 1);
+                        zeros += clz;
+                        break;
+                    } else {
+                        bit_rb->db <<= needed;
+                        bit_rb->rb -= needed;
+                        zeros = 10;
+                        break;
+                    }
+                } else {
+                    if (available < needed) {
+                        zeros += available;
+                        bit_rb->db = 0;
+                        bit_rb->rb = 0;
+                    } else {
+                        bit_rb->db <<= needed;
+                        bit_rb->rb -= needed;
+                        zeros = 10;
+                        break;
+                    }
+                }
             }
             if (zeros < 10) {
-                bit_rb->db <<= 1;
-                --bit_rb->rb;
                 quotient += zeros;
                 break;
             }
@@ -54,4 +82,3 @@ int rice_decode(bit_buf_t *bit_rb, int ns, unsigned lpc_m, int *rd_i) {
     }
     return bit_rb->pcb->s_len + 3 < bit_rb->read_len ? LHDC_DEC_NO_OUTPUT : ns;
 }
-

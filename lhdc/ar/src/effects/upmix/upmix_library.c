@@ -21,12 +21,14 @@ static uint32_t LHDC_PRIVATE(upmix_workspace_directory_bytes)(void) {
 }
 
 /* Apply IIR filtering using filter coefficients and history. */
+#if defined(__aarch64__) || defined(_M_ARM64)
 void LHDC_FN(process_iir_filter)(const double *input, const LHDCIirPlan *plan, int32_t frame_length,
                                  double *zi, double *zo, double *output) {
     const int32_t order = plan->order;
     double denominator_coef[10], numerator_coef[10];
-    memcpy(denominator_coef, plan->denominator, (order + 1) * 8);
-    memcpy(numerator_coef, plan->numerator, (order + 1) * 8);
+    const int32_t coefficient_bytes = (order + 1) * (int32_t)sizeof(double);
+    memcpy(denominator_coef, plan->denominator, coefficient_bytes);
+    memcpy(numerator_coef, plan->numerator, coefficient_bytes);
     double leading_denominator = denominator_coef[0];
     if (!audio_math_is_infinite_f32((float)leading_denominator) &&
         !audio_math_is_nan_f32((float)leading_denominator) && leading_denominator != 0. &&
@@ -41,7 +43,8 @@ void LHDC_FN(process_iir_filter)(const double *input, const LHDCIirPlan *plan, i
         output[i] = zi[i];
         zo[i] = 0.;
     }
-    memset(output + order, 0, (frame_length - order) * 8);
+    const int32_t output_bytes = (frame_length - order) * (int32_t)sizeof(double);
+    memset(output + order, 0, output_bytes);
     for (int32_t i = 0; i < frame_length; ++i) {
         int32_t available_order = order;
         if (available_order > frame_length - i - 1)
@@ -59,6 +62,106 @@ void LHDC_FN(process_iir_filter)(const double *input, const LHDCIirPlan *plan, i
         for (int32_t j = 0; j <= i; ++j)
             zo[j] -= output[frame_length - order + i] * denominator_coef[order - i + j];
 }
+#else
+void LHDC_FN(process_iir_filter)(const double *input, const LHDCIirPlan *plan, int32_t frame_length,
+                                 double *zi, double *zo, double *output) {
+    const int32_t order = plan->order;
+    const double *denominator_coef = plan->denominator;
+    const double *numerator_coef = plan->numerator;
+    double denominator_storage[10], numerator_storage[10];
+    double leading_denominator = denominator_coef[0];
+    if (!audio_math_is_infinite_f32((float)leading_denominator) &&
+        !audio_math_is_nan_f32((float)leading_denominator) && leading_denominator != 0. &&
+        leading_denominator != 1.) {
+        memcpy(denominator_storage, denominator_coef, (order + 1) * sizeof(double));
+        memcpy(numerator_storage, numerator_coef, (order + 1) * sizeof(double));
+        for (int32_t i = 0; i <= order; ++i)
+            numerator_storage[i] /= leading_denominator;
+        for (int32_t i = 1; i <= order; ++i)
+            denominator_storage[i] /= leading_denominator;
+        denominator_storage[0] = 1.;
+        denominator_coef = denominator_storage;
+        numerator_coef = numerator_storage;
+    }
+    for (int32_t i = 0; i < order; ++i) {
+        output[i] = zi[i];
+        zo[i] = 0.;
+    }
+    memset(output + order, 0, (frame_length - order) * sizeof(double));
+    if (order == 9) {
+        int32_t i = 0;
+        int32_t limit = frame_length - 9;
+        for (; i < limit; ++i) {
+            double in_val = input[i];
+            output[i + 0] += in_val * numerator_coef[0];
+            output[i + 1] += in_val * numerator_coef[1];
+            output[i + 2] += in_val * numerator_coef[2];
+            output[i + 3] += in_val * numerator_coef[3];
+            output[i + 4] += in_val * numerator_coef[4];
+            output[i + 5] += in_val * numerator_coef[5];
+            output[i + 6] += in_val * numerator_coef[6];
+            output[i + 7] += in_val * numerator_coef[7];
+            output[i + 8] += in_val * numerator_coef[8];
+            output[i + 9] += in_val * numerator_coef[9];
+            double y = output[i];
+            output[i + 1] -= y * denominator_coef[1];
+            output[i + 2] -= y * denominator_coef[2];
+            output[i + 3] -= y * denominator_coef[3];
+            output[i + 4] -= y * denominator_coef[4];
+            output[i + 5] -= y * denominator_coef[5];
+            output[i + 6] -= y * denominator_coef[6];
+            output[i + 7] -= y * denominator_coef[7];
+            output[i + 8] -= y * denominator_coef[8];
+            output[i + 9] -= y * denominator_coef[9];
+        }
+        for (; i < frame_length; ++i) {
+            int32_t available_order = frame_length - i - 1;
+            for (int32_t j = 0; j <= available_order; ++j)
+                output[i + j] += input[i] * numerator_coef[j];
+            double y = output[i];
+            for (int32_t j = 1; j <= available_order; ++j)
+                output[i + j] -= y * denominator_coef[j];
+        }
+    } else if (order == 2) {
+        int32_t i = 0;
+        int32_t limit = frame_length - 2;
+        for (; i < limit; ++i) {
+            double in_val = input[i];
+            output[i + 0] += in_val * numerator_coef[0];
+            output[i + 1] += in_val * numerator_coef[1];
+            output[i + 2] += in_val * numerator_coef[2];
+            double y = output[i];
+            output[i + 1] -= y * denominator_coef[1];
+            output[i + 2] -= y * denominator_coef[2];
+        }
+        for (; i < frame_length; ++i) {
+            int32_t available_order = frame_length - i - 1;
+            for (int32_t j = 0; j <= available_order; ++j)
+                output[i + j] += input[i] * numerator_coef[j];
+            double y = output[i];
+            for (int32_t j = 1; j <= available_order; ++j)
+                output[i + j] -= y * denominator_coef[j];
+        }
+    } else {
+        for (int32_t i = 0; i < frame_length; ++i) {
+            int32_t available_order = order;
+            if (available_order > frame_length - i - 1)
+                available_order = frame_length - i - 1;
+            for (int32_t j = 0; j <= available_order; ++j)
+                output[i + j] += input[i] * numerator_coef[j];
+            double y = output[i];
+            for (int32_t j = 1; j <= available_order; ++j)
+                output[i + j] -= y * denominator_coef[j];
+        }
+    }
+    for (int32_t i = 0; i < order; ++i)
+        for (int32_t j = 0; j <= i; ++j)
+            zo[j] += input[frame_length - order + i] * numerator_coef[order - i + j];
+    for (int32_t i = 0; i < order; ++i)
+        for (int32_t j = 0; j <= i; ++j)
+            zo[j] -= output[frame_length - order + i] * denominator_coef[order - i + j];
+}
+#endif
 
 /* Look up channel gains for the specified direction in the VBAP table. */
 int32_t LHDC_FN(get_vbap_gain_result)(float *ptr_power_l_bank, float *ptr_power_r_bank,

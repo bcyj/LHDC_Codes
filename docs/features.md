@@ -97,9 +97,12 @@ Different instances isolate audio state. The host serializes configuration, proc
 
 ## Mathematics and transforms
 
-`math/` is independent of LHDC types, allocators, and logs and can serve other codecs. Floating FFT allocates no memory; callers provide input, output, twiddles, and generic-radix scratch. Recursive and optional iterative static schedules are supported.
+`math/` is independent of LHDC types, allocators, and logs and can serve other codecs. Floating FFT allocates no memory; callers provide input, output, twiddles, and generic-radix scratch. Recursive and optional iterative static schedules are supported. Exact SSE2 butterflies are enabled by default on supported x86/x64 targets; an optional non-bit-exact split-radix SSE backend remains separate for AR-oriented performance testing.
 
 Shared LHDC DSP adds DCT-IV/fixed FFT. Numeric helpers follow header-defined domains, rounding, saturation, and modular arithmetic. They are not complete C99 `libm` replacements and do not generally reproduce CRT `errno`, exceptions, or arbitrary rounding modes.
+
+See [Performance Optimizations](performance-optimizations.md) for backend policy, affected hot paths,
+and validation requirements.
 
 ## Platforms
 

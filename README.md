@@ -11,6 +11,7 @@ I developed this library for my other open-source A2DP driver project, drawing e
 - [Module sizes](docs/module-sizes.md): source and compiled sizes for V4/V5 encoding, decoding, AR, and mathematics across four ABIs.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): reference scope, copyrights, and terms for AOSP, KISS FFT, and LZH-related projects.
 - [Build and integration](docs/build-and-integration.md): CMake, MSBuild, Android NDK, and driver memory integration.
+- [Performance optimizations](docs/performance-optimizations.md): default bit-exact acceleration and optional high-performance paths.
 - [Chinese documentation](docs/zh-CN/README.md).
 - [Translation and validation](docs/source-language.md): translation scope and release verification.
 

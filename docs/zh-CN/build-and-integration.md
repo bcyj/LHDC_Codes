@@ -32,6 +32,8 @@ cmake -E chdir build/win32 ctest -C Release --output-on-failure
 | `LHDC_BUILD_TESTS` | `OFF` | 自包含功能和数值测试 |
 | `LHDC_ENABLE_LOGGING` | `OFF` | 调试打印及参数求值 |
 | `LHDC_V5_ENCODER_FIXED_FFT` | `OFF` | V5 编码 MDCT 的可选定点 FFT |
+| `LHDC_ENCODER_HIGH_PERFORMANCE_SSE` | `OFF` | 编码器中更快但非二进制一致的近似路径 |
+| `LHDC_AR_HIGH_PERFORMANCE_SSE` | `OFF` | AR 中更快但非二进制一致的 split-radix SSE 路径 |
 | `LHDC_KISS_FFT_ITERATIVE_STATIC` | `OFF` | 非递归静态浮点 FFT |
 | `LHDC_EXTERNAL_ALLOCATOR_ONLY` | `OFF` | 禁用默认 CRT 堆，要求显式工作区或分配器 |
 | `LHDC_DRIVER_RESOURCES` | `OFF` | 选择非递归 FFT、显式分配及关闭日志的组合 |
@@ -39,6 +41,9 @@ cmake -E chdir build/win32 ctest -C Release --output-on-failure
 | `AR_DEFAULT_BACKEND` | `LHDC` | 通用 PCM 接口默认后端；可选择 `NONE` |
 
 资源组合要求 Release／`NDEBUG`；不能同时显式选择递归 FFT、默认分配器或开启日志。
+
+二进制一致 FFT SSE2 路径默认开启。两个 `HIGH_PERFORMANCE_SSE` 选项相互独立且默认关闭，
+因为它们可能改变编码字节或 AR PCM 的浮点舍入；二进制一致性基准不要开启。详见[性能优化说明](performance-optimizations.md)。
 
 仅构建编码器：
 
@@ -83,7 +88,9 @@ msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:P
 
 如使用 VS2022 的 v143 工具集，可附加 `/p:PlatformToolset=v143`。输出默认位于本目录的 `build/windows/`，可通过 `LhdcOutputRoot`、`DecoderEvidenceRoot` 和 `AudioMathOutputRoot` 属性改写。
 
-MSBuild 可选属性：`LhdcV5EncoderFixedFft=1`、`LhdcKissFftIterativeStatic=1`、`LhdcDriverResources=1`。直接链接静态库时须一并链接其公共数学和组件依赖；优先使用 CMake 的公开目标管理依赖。
+MSBuild 可选属性：`LhdcV5EncoderFixedFft=1`、`LhdcKissFftIterativeStatic=1`、
+`LhdcDriverResources=1`。新增高性能开关目前通过 CMake 选择；默认的二进制一致优化不需要额外
+MSBuild 属性。直接链接静态库时须一并链接其公共数学和组件依赖；优先使用 CMake 的公开目标管理依赖。
 
 ## Android NDK
 

@@ -29,6 +29,14 @@
 #include "encoder_tables.h"
 #include "../../../../platform/include/lhdc_print.h"
 
+#if defined(__SSE2__) ||                                                                          \
+    (defined(_MSC_VER) && (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86))))
+#include <emmintrin.h>
+#define LHDC_V4_LPC_USE_SSE2 1
+#else
+#define LHDC_V4_LPC_USE_SSE2 0
+#endif
+
 /* Count leading zeros in 32 bits; zero returns 32. */
 uint32_t v4_lpc_leading_zeros32(uint32_t v) {
     return v ? (uint32_t)audio_math_count_leading_zeros32(v) : LHDC_V4_CLZ_ZERO_RESULT;
@@ -225,9 +233,42 @@ __attribute__((noinline))
 #endif
     static void calculate_lpc_autocorrelation(const float *samples, uint32_t count, float *result) {
     float sums[LHDC_V4_LPC_MAX_ORDER + 1] = {0};
-    for (uint32_t sample = 0; sample < count; ++sample)
+    uint32_t fast_count = count > LHDC_V4_LPC_MAX_ORDER ? count - LHDC_V4_LPC_MAX_ORDER : 0;
+#if LHDC_V4_LPC_USE_SSE2
+    __m128 sum0_3 = _mm_setzero_ps();
+    __m128 sum4_7 = _mm_setzero_ps();
+    float sum8 = 0.0f;
+    for (uint32_t sample = 0; sample < fast_count; ++sample) {
+        float s = samples[sample];
+        __m128 s_vec = _mm_set1_ps(s);
+        __m128 x0_3 = _mm_loadu_ps(&samples[sample]);
+        __m128 x4_7 = _mm_loadu_ps(&samples[sample + 4]);
+        sum0_3 = _mm_add_ps(sum0_3, _mm_mul_ps(s_vec, x0_3));
+        sum4_7 = _mm_add_ps(sum4_7, _mm_mul_ps(s_vec, x4_7));
+        sum8 += s * samples[sample + 8];
+    }
+    _mm_storeu_ps(&sums[0], sum0_3);
+    _mm_storeu_ps(&sums[4], sum4_7);
+    sums[8] = sum8;
+#else
+    for (uint32_t sample = 0; sample < fast_count; ++sample) {
+        float s = samples[sample];
+        sums[0] += s * samples[sample];
+        sums[1] += s * samples[sample + 1];
+        sums[2] += s * samples[sample + 2];
+        sums[3] += s * samples[sample + 3];
+        sums[4] += s * samples[sample + 4];
+        sums[5] += s * samples[sample + 5];
+        sums[6] += s * samples[sample + 6];
+        sums[7] += s * samples[sample + 7];
+        sums[8] += s * samples[sample + 8];
+    }
+#endif
+    for (uint32_t sample = fast_count; sample < count; ++sample) {
+        float s = samples[sample];
         for (uint32_t lag = 0; lag <= LHDC_V4_LPC_MAX_ORDER && sample + lag < count; ++lag)
-            sums[lag] = sums[lag] + samples[sample] * samples[sample + lag];
+            sums[lag] = sums[lag] + s * samples[sample + lag];
+    }
     memcpy(result, sums, sizeof sums);
 }
 
@@ -281,13 +322,126 @@ void v4_lpcV_Carcow(const int32_t *data, uint32_t data_len, const int32_t *qlp_c
     /* data[-order..-1] is valid predictor history. Native supports orders 1..8. */
     if (order < 1 || order > 8)
         return;
+    const unsigned shift = (unsigned)lp_quantization;
+    if (order == 1) {
+        int64_t c0 = qlp_coeff[0];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        return;
+    }
+#if defined(_M_X64) || defined(__x86_64__) || defined(_M_ARM) || defined(__arm__)
+    /* Measurements show that unrolling orders 2..8 reduces loop-control overhead on x64 and ARM32.
+     * Win32 and ARM64 regress from register pressure and multiply scheduling, so they use the
+     * compact generic loop below. */
+    switch (order) {
+    case 2: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 3: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 4: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2], c3 = qlp_coeff[3];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 4] * c3);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 5: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2], c3 = qlp_coeff[3],
+                c4 = qlp_coeff[4];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 4] * c3) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 5] * c4);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 6: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2], c3 = qlp_coeff[3],
+                c4 = qlp_coeff[4], c5 = qlp_coeff[5];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 4] * c3) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 5] * c4) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 6] * c5);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 7: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2], c3 = qlp_coeff[3],
+                c4 = qlp_coeff[4], c5 = qlp_coeff[5], c6 = qlp_coeff[6];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 4] * c3) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 5] * c4) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 6] * c5) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 7] * c6);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    case 8: {
+        int64_t c0 = qlp_coeff[0], c1 = qlp_coeff[1], c2 = qlp_coeff[2], c3 = qlp_coeff[3],
+                c4 = qlp_coeff[4], c5 = qlp_coeff[5], c6 = qlp_coeff[6], c7 = qlp_coeff[7];
+        for (uint32_t i = 0; i < data_len; ++i) {
+            uint64_t sum = (uint64_t)((int64_t)data[(ptrdiff_t)i - 1] * c0) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 2] * c1) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 3] * c2) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 4] * c3) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 5] * c4) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 6] * c5) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 7] * c6) +
+                           (uint64_t)((int64_t)data[(ptrdiff_t)i - 8] * c7);
+            int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
+            residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+#else
     for (uint32_t i = 0; i < data_len; ++i) {
         uint64_t sum = 0;
         for (uint32_t k = 0; k < order; ++k)
             sum += (uint64_t)((int64_t)data[(ptrdiff_t)i - (ptrdiff_t)k - 1] * qlp_coeff[k]);
-        /* Codec domain: 0<=shift<=31. Unsigned accumulation specifies wrapping. */
-        int64_t prediction =
-            audio_math_shift_right_bounded_i64((int64_t)sum, (unsigned)lp_quantization);
+        int64_t prediction = audio_math_shift_right_bounded_i64((int64_t)sum, shift);
         residual[i] = (int32_t)((uint32_t)data[i] - (uint32_t)prediction);
     }
+#endif
 }

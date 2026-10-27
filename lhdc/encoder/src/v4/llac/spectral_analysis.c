@@ -21,6 +21,12 @@
 #include "spectral_analysis_tables.h"
 #include <string.h>
 
+#if (defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)) && \
+    !defined(__arm__) && !defined(__aarch64__)
+#include <emmintrin.h>
+#define LHDC_LLAC_TNS_SSE2 1
+#endif
+
 #if defined(LHDC_X86_ATTACK_HIGHPASS_BLOCK)
 /* Downsample in 40-sample blocks with branches outside loops to preserve MSVC vectorization.
  * first is 0/40/80/120; the final two blocks of 240-sample frames retain zero-padding rules. */
@@ -266,10 +272,12 @@ void v4f_llac_pvq_search(LLAC_FLOAT *x_in, LLAC_INT dim, LLAC_INT pulses, LLAC_I
     }
     yy *= 0.5f;
     while (pulse_tot < pulses) {
-        LLAC_INT imax = 0;
-        LLAC_FLOAT cmax_num = -32768.0f, cmax_den = 0.0f;
         LLAC_FLOAT yy_tmp_base = yy + 0.5f;
-        for (LLAC_INT i = 0; i < dim; ++i) {
+        LLAC_FLOAT xy2_tmp0 = xy + xabs[0];
+        LLAC_INT imax = 0;
+        LLAC_FLOAT cmax_num = xy2_tmp0 * xy2_tmp0;
+        LLAC_FLOAT cmax_den = yy_tmp_base + (LLAC_FLOAT)y[0];
+        for (LLAC_INT i = 1; i < dim; ++i) {
             LLAC_FLOAT xy2_tmp = xy + xabs[i];
             xy2_tmp *= xy2_tmp;
             LLAC_FLOAT yy_tmp = yy_tmp_base + (LLAC_FLOAT)y[i];
@@ -280,7 +288,7 @@ void v4f_llac_pvq_search(LLAC_FLOAT *x_in, LLAC_INT dim, LLAC_INT pulses, LLAC_I
             }
         }
         xy += xabs[imax];
-        yy = yy_tmp_base + (LLAC_FLOAT)y[imax];
+        yy = cmax_den;
         ++y[imax];
         ++pulse_tot;
     }
@@ -441,14 +449,18 @@ void v4f_llac_analyze_sns(LLAC_FLOAT *x, LLAC_INT tilt, LLAC_INT xLen, LLAC_FLOA
 static void v4i_sns_inverse_dct(const LLAC_FLOAT *input, LLAC_FLOAT *output) {
     const double(*cosines)[16] = lhdc_llac_sns_inverse_cosines();
     for (LLAC_INT i = 0; i < 16; ++i) {
-#if !defined(_KERNEL_MODE) || !LHDC_LLAC_SNS_FIXED_TABLES_AVAILABLE
+#if defined(_KERNEL_MODE) && LHDC_LLAC_SNS_FIXED_TABLES_AVAILABLE
+        double cosine0 = cosines[i][0];
+        LLAC_FLOAT sumInLoop =
+            (LLAC_FLOAT)(cosine0 * (double)input[0]) * AUDIO_MATH_INV_SQRT_TWO_F32;
+        for (LLAC_INT j = 1; j < 16; ++j) {
+            double cosine = cosines[i][j];
+            sumInLoop += (LLAC_FLOAT)(cosine * (double)input[j]);
+        }
+#else
         double row = (double)i + 1.0;
-#endif
         LLAC_FLOAT sumInLoop = 0.0f;
         for (LLAC_INT j = 0; j < 16; ++j) {
-#if defined(_KERNEL_MODE) && LHDC_LLAC_SNS_FIXED_TABLES_AVAILABLE
-            double cosine = cosines[i][j];
-#else
             double cosine;
             if (cosines) {
                 cosine = cosines[i][j];
@@ -456,12 +468,12 @@ static void v4i_sns_inverse_dct(const LLAC_FLOAT *input, LLAC_FLOAT *output) {
                 double angle = (row + row - 1.0) * AUDIO_MATH_PI_OVER_32_F64 * (double)j;
                 cosine = audio_math_cos(angle);
             }
-#endif
             LLAC_FLOAT value = (LLAC_FLOAT)(cosine * (double)input[j]);
             if (!j)
                 value *= AUDIO_MATH_INV_SQRT_TWO_F32;
             sumInLoop += value;
         }
+#endif
         output[i] = sumInLoop * AUDIO_MATH_INV_SQRT_EIGHT_F32;
     }
 }
@@ -499,13 +511,27 @@ static LLAC_INT select_sns_codebooks(const LLAC_FLOAT *env, LLACSnsIndices *sns,
     LLAC_INT idx = 0;
     for (LLAC_INT sec = 0; sec < 2; ++sec) {
         LLAC_FLOAT bestdist = LHDC_V4_LLAC_SNS_INITIAL_DISTANCE;
+        const LLAC_FLOAT(*cb)[32] = sec ? alg_signal_t2 : alg_signal_t1;
+        const LLAC_FLOAT *e = env + sec * 8;
+        LLAC_FLOAT e0 = e[0], e1 = e[1], e2 = e[2], e3 = e[3];
+        LLAC_FLOAT e4 = e[4], e5 = e[5], e6 = e[6], e7 = e[7];
         for (LLAC_INT c = 0; c < 32; ++c) {
-            LLAC_FLOAT sum = 0.0f;
-            for (LLAC_INT i = 0; i < 8; ++i) {
-                LLAC_FLOAT codebook_error =
-                    env[sec * 8 + i] - (sec ? alg_signal_t2[i][c] : alg_signal_t1[i][c]);
-                sum += codebook_error * codebook_error;
-            }
+            LLAC_FLOAT err0 = e0 - cb[0][c];
+            LLAC_FLOAT err1 = e1 - cb[1][c];
+            LLAC_FLOAT err2 = e2 - cb[2][c];
+            LLAC_FLOAT err3 = e3 - cb[3][c];
+            LLAC_FLOAT err4 = e4 - cb[4][c];
+            LLAC_FLOAT err5 = e5 - cb[5][c];
+            LLAC_FLOAT err6 = e6 - cb[6][c];
+            LLAC_FLOAT err7 = e7 - cb[7][c];
+            LLAC_FLOAT sum = err0 * err0;
+            sum += err1 * err1;
+            sum += err2 * err2;
+            sum += err3 * err3;
+            sum += err4 * err4;
+            sum += err5 * err5;
+            sum += err6 * err6;
+            sum += err7 * err7;
             if (sum < bestdist) {
                 bestdist = sum;
                 idx = c;
@@ -516,7 +542,7 @@ static LLAC_INT select_sns_codebooks(const LLAC_FLOAT *env, LLACSnsIndices *sns,
         else
             sns->high_codebook = idx;
         for (LLAC_INT i = 0; i < 8; ++i)
-            st1_vector[sec * 8 + i] = sec ? alg_signal_t2[i][idx] : alg_signal_t1[i][idx];
+            st1_vector[sec * 8 + i] = cb[i][idx];
     }
     return idx;
 }
@@ -670,6 +696,77 @@ static void analyze_tns_autocorrelation(const LLAC_FLOAT *x, LLAC_INT first_freq
             r[0] = 1.0f;
             break;
         }
+#if defined(LHDC_LLAC_TNS_SSE2)
+        LLAC_FLOAT corr[9] = {0.0f};
+        LLAC_INT warmup_end = first + 8;
+        if (warmup_end > last)
+            warmup_end = last;
+
+        for (LLAC_INT i = first; i < warmup_end; ++i) {
+            LLAC_FLOAT xi = x[i];
+            for (LLAC_INT lag = 0; lag <= maxOrder; ++lag) {
+                if (i - first >= lag) {
+                    corr[lag] += xi * x[i - lag];
+                }
+            }
+        }
+
+        if (last > warmup_end) {
+            if (maxOrder >= 8) {
+                __m128 acc0_3 = _mm_loadu_ps(&corr[0]);
+                __m128 acc4_7 = _mm_loadu_ps(&corr[4]);
+                LLAC_FLOAT acc8 = corr[8];
+
+                for (LLAC_INT i = warmup_end; i < last; ++i) {
+                    __m128 xi = _mm_set1_ps(x[i]);
+
+                    __m128 v0_3 = _mm_loadu_ps(&x[i - 3]);
+                    v0_3 = _mm_shuffle_ps(v0_3, v0_3, _MM_SHUFFLE(0, 1, 2, 3));
+                    acc0_3 = _mm_add_ps(acc0_3, _mm_mul_ps(xi, v0_3));
+
+                    __m128 v4_7 = _mm_loadu_ps(&x[i - 7]);
+                    v4_7 = _mm_shuffle_ps(v4_7, v4_7, _MM_SHUFFLE(0, 1, 2, 3));
+                    acc4_7 = _mm_add_ps(acc4_7, _mm_mul_ps(xi, v4_7));
+
+                    acc8 += x[i] * x[i - 8];
+                }
+                _mm_storeu_ps(&corr[0], acc0_3);
+                _mm_storeu_ps(&corr[4], acc4_7);
+                corr[8] = acc8;
+            } else if (maxOrder >= 4) {
+                __m128 acc0_3 = _mm_loadu_ps(&corr[0]);
+
+                for (LLAC_INT i = warmup_end; i < last; ++i) {
+                    __m128 xi = _mm_set1_ps(x[i]);
+
+                    __m128 v0_3 = _mm_loadu_ps(&x[i - 3]);
+                    v0_3 = _mm_shuffle_ps(v0_3, v0_3, _MM_SHUFFLE(0, 1, 2, 3));
+                    acc0_3 = _mm_add_ps(acc0_3, _mm_mul_ps(xi, v0_3));
+
+                    for (LLAC_INT lag = 4; lag <= maxOrder; ++lag) {
+                        corr[lag] += x[i] * x[i - lag];
+                    }
+                }
+                _mm_storeu_ps(&corr[0], acc0_3);
+            } else {
+                for (LLAC_INT i = warmup_end; i < last; ++i) {
+                    LLAC_FLOAT xi = x[i];
+                    for (LLAC_INT lag = 0; lag <= maxOrder; ++lag) {
+                        corr[lag] += xi * x[i - lag];
+                    }
+                }
+            }
+        }
+
+#if defined(LHDC_LLAC_FAST_RECIPROCAL) && LHDC_LLAC_FAST_RECIPROCAL
+        LLAC_FLOAT inv_sum = 1.0f / sum;
+        for (LLAC_INT lag = 0; lag <= maxOrder; ++lag)
+            r[lag] += corr[lag] * inv_sum;
+#else
+        for (LLAC_INT lag = 0; lag <= maxOrder; ++lag)
+            r[lag] += corr[lag] / sum;
+#endif
+#else
         for (LLAC_INT lag = 0; lag <= maxOrder; ++lag) {
             LLAC_FLOAT corr = 0.0f;
 
@@ -677,6 +774,7 @@ static void analyze_tns_autocorrelation(const LLAC_FLOAT *x, LLAC_INT first_freq
                 corr += x[i] * (i - first < lag ? 0.0f : x[i - lag]);
             r[lag] += corr / sum;
         }
+#endif
     }
     for (LLAC_INT i = 0; i <= maxOrder; ++i)
         r[i] *= alg_signal_t7[i];

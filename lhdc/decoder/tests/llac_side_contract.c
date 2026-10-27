@@ -14,7 +14,7 @@ int main(void) {
     for (unsigned mode = 0; mode < 5; ++mode) {
         uint8_t bytes[32] = {0};
         unsigned position = 0;
-        put_field(bytes, &position, 0, 3); /* lastnz=2，N=16。 */
+        put_field(bytes, &position, 0, 3); /* lastnz=2, N=16. */
         put_field(bytes, &position, 0, 1);
         put_field(bytes, &position, 117, 8);
         put_field(bytes, &position, 0, 1); /* One TNS filter with order zero. */

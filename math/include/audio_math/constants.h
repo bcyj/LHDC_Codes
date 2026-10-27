@@ -1,8 +1,9 @@
 #ifndef AUDIO_MATH_CONSTANTS_H
 #define AUDIO_MATH_CONSTANTS_H
 
-/* Common mathematical constants: literal suffixes set precision; expression types/order determine rounding.
- * Hexadecimal notation encodes exact target binary values without nonstandard M_PI or runtime libm.
+/* Common mathematical constants. Literal suffixes select evaluation precision, while the
+ * calling expression's types and operation order determine rounding. Hexadecimal literals
+ * encode exact target binary values without nonstandard M_PI or runtime libm dependencies.
  */
 
 /* Double-precision values. Do not replace division by reciprocal multiplication or reorder products/divisions. */
@@ -24,8 +25,9 @@
 #define AUDIO_MATH_LOG10_TWO_HIGH_F64 0x1.3441350000000p-2
 #define AUDIO_MATH_LOG10_TWO_LOW_F64 0x1.3ef3fde623e25p-31
 
-/* f suffixes select single precision without macro casts; exact binary scaling shares base values.
- * Angle conversion uses specified float bits, not a replacement float pi / 180 expression.
+/* The f suffix selects single precision without casts inside macros; exact binary scalings
+ * share their base values. Angle conversion uses a specified float bit pattern and must not
+ * be replaced directly with float pi / 180.
  */
 #define AUDIO_MATH_PI_F32 0x1.921fb6p+1f
 #define AUDIO_MATH_TWO_PI_F32 (2.0f * AUDIO_MATH_PI_F32)
@@ -57,6 +59,7 @@
 #define AUDIO_MATH_ONE_TENTH_F32 0x1.99999ap-4f
 #define AUDIO_MATH_POW2_NEG_32_F32 0x1p-32f
 #define AUDIO_MATH_POW2_NEG_31_F64 0x1p-31
+#define AUDIO_MATH_POW2_NEG_31_F32 0x1p-31f
 #define AUDIO_MATH_POW2_NEG_30_F32 0x1p-30f
 #define AUDIO_MATH_POW2_NEG_24_F32 0x1p-24f
 #define AUDIO_MATH_POW2_NEG_20_F32 0x1p-20f

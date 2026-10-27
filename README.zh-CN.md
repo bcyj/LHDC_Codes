@@ -13,7 +13,7 @@
 - [模块体积统计](docs/zh-CN/module-sizes.md)：V4/V5 编码、解码、AR 和数学库的四 ABI 源码及编译体积。
 - [开源引用与许可](THIRD_PARTY_NOTICES.zh-CN.md)：AOSP、KISS FFT 与 LZH 相关实现及参考项目的适用范围、版权和条款。
 - [构建与接入](docs/zh-CN/build-and-integration.md)：CMake、MSBuild、Android NDK 和驱动内存适配。
-- [发布清单](release_manifest.json)：文件哈希、构建调整及本次验证摘要。
+- [性能优化说明](docs/zh-CN/performance-optimizations.md)：默认二进制一致加速及可选高性能路径。
 
 ```text
 lhdc_codes_release/

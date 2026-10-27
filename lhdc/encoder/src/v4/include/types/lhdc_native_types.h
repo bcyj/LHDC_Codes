@@ -160,7 +160,7 @@ typedef struct Dct4 Dct4;
 
 typedef struct Fft Fft;
 
-typedef struct Complex Complex;
+typedef AudioMathComplex32 Complex;
 
 struct Fft {
     LLAC_INT length;
@@ -170,8 +170,8 @@ struct Fft {
 struct Dct4 {
     /* N-point DCT-IV with fft.length=N/2; twid1/2 are pre/post rotations. */
     LLAC_INT length;
-    struct Complex *twid1;
-    struct Complex *twid2;
+    Complex *twid1;
+    Complex *twid2;
     struct Fft fft;
 };
 
@@ -219,11 +219,6 @@ struct EncSetup {
     LLAC_INT regBits;
     struct Mdct mdctStruct;
     struct Dct2 dct2StructSNS;
-};
-
-struct Complex {
-    LLAC_FLOAT r;
-    LLAC_FLOAT i;
 };
 
 typedef struct LLAC_Enc LLAC_Enc;

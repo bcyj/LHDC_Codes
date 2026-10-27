@@ -23,8 +23,15 @@ struct lhdc_Encoder_s *v4f_lhdc_NewEncoder_with_allocator(const LhdcAllocator *a
 }
 
 #include <limits.h>
-#include <stdint.h>
 #include "frame_encode.h"
+
+#if defined(__SSE2__) ||                                                                          \
+    (defined(_MSC_VER) && (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86))))
+#include <emmintrin.h>
+#define LHDC_V4_FRAME_USE_SSE2 1
+#else
+#define LHDC_V4_FRAME_USE_SSE2 0
+#endif
 
 /* Pack residual low bits MSB-first; each chunk independently pads its final byte. */
 static int32_t v4i_block_encode_write_low_bits(const uint32_t *residual, int32_t samples,
@@ -482,6 +489,37 @@ int32_t v4f_lhdc_InitEncoder(struct lhdc_Encoder_s *encb, int32_t bits_per_sampl
     return LHDC_V4_STATUS_OK;
 }
 
+#if LHDC_V4_FRAME_USE_SSE2
+static inline void v4i_calc_diff_and_magnitudes_sse2(const int32_t *prev, int32_t *curr,
+                                                      int32_t start, int32_t end,
+                                                      uint64_t *p_total) {
+    int32_t i = start;
+    __m128i zero = _mm_setzero_si128();
+    __m128i acc_lo = zero;
+    __m128i acc_hi = zero;
+    for (; i <= end - 4; i += 4) {
+        __m128i p_curr = _mm_loadu_si128((const __m128i *)(prev + i));
+        __m128i p_prev = _mm_loadu_si128((const __m128i *)(prev + i - 1));
+        __m128i diff = _mm_sub_epi32(p_curr, p_prev);
+        _mm_storeu_si128((__m128i *)(curr + i), diff);
+        __m128i smask = _mm_srai_epi32(diff, 31);
+        __m128i mag = _mm_xor_si128(diff, smask);
+        acc_lo = _mm_add_epi64(acc_lo, _mm_unpacklo_epi32(mag, zero));
+        acc_hi = _mm_add_epi64(acc_hi, _mm_unpackhi_epi32(mag, zero));
+    }
+    uint64_t total = *p_total;
+    uint64_t acc[2];
+    __m128i sum_acc = _mm_add_epi64(acc_lo, acc_hi);
+    _mm_storeu_si128((__m128i *)acc, sum_acc);
+    total += acc[0] + acc[1];
+    for (; i < end; ++i) {
+        curr[i] = audio_math_subtract_wrap_i32(prev[i], prev[i - 1]);
+        total += v4i_prediction_folded_magnitude(curr[i]);
+    }
+    *p_total = total;
+}
+#endif
+
 /* Compare fixed-order difference prediction with V3/V4 variable-quantization LPC to select residual coding. */
 int32_t v4f_CalcResidual(lhdc_Encoder_s *encb, int32_t *dat,
                          int32_t (*rd)[LHDC_V4_MAX_BLOCK_SAMPLES], unsigned long long *min_total,
@@ -491,13 +529,45 @@ int32_t v4f_CalcResidual(lhdc_Encoder_s *encb, int32_t *dat,
     int32_t ns = encb->block_size;
     for (int32_t r = 0; r < 14; ++r)
         rd[r][0] = 0;
+#if LHDC_V4_FRAME_USE_SSE2
+    v4i_calc_diff_and_magnitudes_sse2(dat, rd[1], 1, ns, &total[1]);
+    int32_t i_dat = 1;
+    __m128i zero_dat = _mm_setzero_si128();
+    __m128i acc_lo_dat = zero_dat;
+    __m128i acc_hi_dat = zero_dat;
+    for (; i_dat <= ns - 4; i_dat += 4) {
+        __m128i val = _mm_loadu_si128((const __m128i *)(dat + i_dat));
+        __m128i smask = _mm_srai_epi32(val, 31);
+        __m128i mag = _mm_xor_si128(val, smask);
+        acc_lo_dat = _mm_add_epi64(acc_lo_dat, _mm_unpacklo_epi32(mag, zero_dat));
+        acc_hi_dat = _mm_add_epi64(acc_hi_dat, _mm_unpackhi_epi32(mag, zero_dat));
+    }
+    uint64_t acc_dat[2];
+    __m128i sum_acc_dat = _mm_add_epi64(acc_lo_dat, acc_hi_dat);
+    _mm_storeu_si128((__m128i *)acc_dat, sum_acc_dat);
+    total[0] += acc_dat[0] + acc_dat[1];
+    for (; i_dat < ns; ++i_dat)
+        total[0] += v4i_prediction_folded_magnitude(dat[i_dat]);
+#else
     for (int32_t i = 1; i < ns; ++i) {
         rd[1][i] = audio_math_subtract_wrap_i32(dat[i], dat[i - 1]);
         total[0] += v4i_prediction_folded_magnitude(dat[i]);
         total[1] += v4i_prediction_folded_magnitude(rd[1][i]);
     }
+#endif
     uint32_t max_lpc = encb->lhdc_ver_code < 300 ? 14 : 13;
     for (uint32_t r = 2; r < max_lpc; ++r) {
+#if LHDC_V4_FRAME_USE_SSE2
+        int32_t i = 1;
+        for (; i < (int32_t)r && i < ns; ++i) {
+            rd[r][i] = audio_math_subtract_wrap_i32(rd[r - 1][i], rd[r - 1][i - 1]);
+            uint32_t magnitude = v4i_prediction_folded_magnitude(rd[r][i]);
+            total[r] += magnitude;
+            stage_totals[r] += magnitude;
+        }
+        if (i < ns)
+            v4i_calc_diff_and_magnitudes_sse2(rd[r - 1], rd[r], i, ns, &total[r]);
+#else
         for (int32_t i = 1; i < ns; ++i) {
             rd[r][i] = audio_math_subtract_wrap_i32(rd[r - 1][i], rd[r - 1][i - 1]);
             uint32_t magnitude = v4i_prediction_folded_magnitude(rd[r][i]);
@@ -505,6 +575,7 @@ int32_t v4f_CalcResidual(lhdc_Encoder_s *encb, int32_t *dat,
             if ((uint32_t)i < r)
                 stage_totals[r] += magnitude;
         }
+#endif
         if (total[r - 1] - stage_totals[r - 1] < total[r] - stage_totals[r]) {
             max_lpc = r;
             break;
@@ -567,6 +638,10 @@ int32_t v4_eval_rice_encode_len(uint32_t *rd2, int32_t ns, uint32_t nb) {
     uint32_t len = 0;
     for (int32_t i = 0; i < ns; ++i) {
         uint32_t q = v4_shift_right_compat32(rd2[i], nb);
+        if (q <= 9u) {
+            len += q + 1u + nb;
+            continue;
+        }
         int32_t escaped = 0;
         while (q > 9u) {
             len += 16u;
@@ -599,15 +674,17 @@ void v4_byte_write_int32(int32_t dat, int32_t nb, uint8_t *out) {
     *out = (uint8_t)dat;
 }
 
-/* Flush complete bytes from the bit buffer and update remaining bits/content. */
-
-uint8_t *v4_MoveOutBytes(V4BitWrite *bw, uint8_t *out) {
+static inline uint8_t *v4i_move_out_bytes_inline(V4BitWrite *bw, uint8_t *out) {
     while (bw->rb > 7u) {
         *out++ = (uint8_t)(bw->db.u32 >> 24);
         bw->db.u32 <<= 8;
         bw->rb -= 8u;
     }
     return out;
+}
+
+uint8_t *v4_MoveOutBytes(V4BitWrite *bw, uint8_t *out) {
+    return v4i_move_out_bytes_inline(bw, out);
 }
 #include "../include/codec/v4_pcm.h"
 
@@ -629,10 +706,41 @@ int32_t v4_lz_make_data(uint32_t *rd2, int32_t ns, int32_t sh, int32_t nb, uint8
         width = 1;
     if (width > 4)
         width = 4;
-    for (int32_t i = 0; i < ns; ++i)
-        v4_byte_write_int32((int32_t)(rd2[i] >> (uint32_t)sh), width,
-                            uc + (size_t)i * (uint32_t)width);
-    return ns > 0 ? ns * width : LHDC_V4_NO_OUTPUT_BYTES;
+    if (ns <= 0)
+        return LHDC_V4_NO_OUTPUT_BYTES;
+    uint32_t shift = (uint32_t)sh;
+    if (width == 1) {
+        for (int32_t i = 0; i < ns; ++i)
+            uc[i] = (uint8_t)(rd2[i] >> shift);
+    } else if (width == 2) {
+        uint8_t *p = uc;
+        for (int32_t i = 0; i < ns; ++i) {
+            uint32_t val = rd2[i] >> shift;
+            p[0] = (uint8_t)(val >> 8);
+            p[1] = (uint8_t)val;
+            p += 2;
+        }
+    } else if (width == 3) {
+        uint8_t *p = uc;
+        for (int32_t i = 0; i < ns; ++i) {
+            uint32_t val = rd2[i] >> shift;
+            p[0] = (uint8_t)(val >> 16);
+            p[1] = (uint8_t)(val >> 8);
+            p[2] = (uint8_t)val;
+            p += 3;
+        }
+    } else {
+        uint8_t *p = uc;
+        for (int32_t i = 0; i < ns; ++i) {
+            uint32_t val = rd2[i] >> shift;
+            p[0] = (uint8_t)(val >> 24);
+            p[1] = (uint8_t)(val >> 16);
+            p[2] = (uint8_t)(val >> 8);
+            p[3] = (uint8_t)val;
+            p += 4;
+        }
+    }
+    return ns * width;
 }
 
 /* Write a bit field and propagate error status. */
@@ -652,30 +760,35 @@ int32_t v4_encode_residual_block(uint32_t *rd2, int32_t ns, uint32_t nb, uint8_t
     uint32_t mask = nb ? UINT32_MAX >> (32 - nb) : 0;
     for (int32_t i = 0; i < ns; ++i) {
         uint32_t q = rd2[i] >> nb;
-        int32_t escaped = 0;
-        while (q > 9) {
-            if (q - 10 < 63) {
-                v4i_residual_output_append(&bw, q - 10, 16);
-                cursor = v4_MoveOutBytes(&bw, cursor);
-                escaped = 1;
-                break;
-            }
-            v4i_residual_output_append(&bw, 63, 16);
-            cursor = v4_MoveOutBytes(&bw, cursor);
-            q -= 73;
-            if (end <= cursor)
-                return LHDC_V4_STATUS_ERROR;
-        }
-        if (!escaped) {
+        if (q <= 9u) {
             v4i_residual_output_append(&bw, 1, q + 1);
-            cursor = v4_MoveOutBytes(&bw, cursor);
+            cursor = v4i_move_out_bytes_inline(&bw, cursor);
+        } else {
+            int32_t escaped = 0;
+            while (q > 9u) {
+                if (q - 10u < 63u) {
+                    v4i_residual_output_append(&bw, q - 10u, 16);
+                    cursor = v4i_move_out_bytes_inline(&bw, cursor);
+                    escaped = 1;
+                    break;
+                }
+                v4i_residual_output_append(&bw, 63, 16);
+                cursor = v4i_move_out_bytes_inline(&bw, cursor);
+                q -= 73u;
+                if (end <= cursor)
+                    return LHDC_V4_STATUS_ERROR;
+            }
+            if (!escaped) {
+                v4i_residual_output_append(&bw, 1, q + 1);
+                cursor = v4i_move_out_bytes_inline(&bw, cursor);
+            }
         }
 
         if (end < cursor + (bw.rb + nb + 7) / 8)
             return LHDC_V4_STATUS_ERROR;
         if (nb) {
             v4i_residual_output_append(&bw, rd2[i] & mask, nb);
-            cursor = v4_MoveOutBytes(&bw, cursor);
+            cursor = v4i_move_out_bytes_inline(&bw, cursor);
             if (end <= cursor)
                 return LHDC_V4_STATUS_ERROR;
         }

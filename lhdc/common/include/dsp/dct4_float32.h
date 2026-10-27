@@ -34,16 +34,16 @@ typedef enum LhdcDct4F32Scaling {
     LHDC_DCT4_SCALE_AFTER_ROTATION = 0,
     LHDC_DCT4_SCALE_IN_ROTATION_TABLE = 1
 } LhdcDct4F32Scaling;
-/* Borrow existing instance rotation tables and a forward FFT plan without generating, copying, or rescaling factors.
- * Fixed-size memcpy reads pre/post rotations, allowing differently named two-float complex structures.
- * FFT twiddles and work buffers must be kiss_fft_cpx objects, not cast float arrays.
- * factors points to at least 64 int32_t KISS factors; all pointers remain valid throughout the call.
+/* Borrow the instance's existing rotation tables and forward FFT plan without generating tables,
+ * copying factors, or changing embedded scaling. Pre/post-rotation tables, FFT twiddles, and work
+ * buffers all use the common complex type to avoid cross-structure aliasing. factors addresses at
+ * least 64 int32_t KISS factor entries; every pointer remains valid throughout the call.
  */
 typedef struct LhdcDct4F32Kernel {
     int32_t length;
     const int32_t *factors;
-    const void *pre_rotation;
-    const void *post_rotation;
+    const kiss_fft_cpx *pre_rotation;
+    const kiss_fft_cpx *post_rotation;
     const kiss_fft_cpx *fft_twiddles;
     int allow_generic_radix;
     LhdcDct4F32Scaling scaling;

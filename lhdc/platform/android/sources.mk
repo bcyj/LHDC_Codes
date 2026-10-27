@@ -5,7 +5,8 @@ LHDC_SOURCES_MATH := \
   math/src/float_exp.c \
   math/src/float_sine.c \
   math/src/fft_float32.c \
-  math/src/fft_float32_tables.c
+  math/src/fft_float32_tables.c \
+  math/src/fft_sse.c
 
 LHDC_SOURCES_COMMON := \
   lhdc/common/src/buffer/cirbuf.c \

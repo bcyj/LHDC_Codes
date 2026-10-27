@@ -45,10 +45,8 @@ int lhdc_dec_lossy_frame_length_program(tdata_all_buffer_struct *tdata_all_buffe
         tdata_all_buffer->init_fq_tbl_01[i] = (int)((read_table1[i] >> 2) ^ 0x55aa);
         tdata_all_buffer->init_fq_tbl_02[i] = (int)((read_table2[i] >> 2) ^ 0x55aa);
     }
-    int *read_table3 = lhdc_table_power_of_2_table();
-    for (unsigned i = 0; i < 161; ++i)
-        tdata_all_buffer->power_of_2_tbl[i] = audio_math_int32_from_bits(
-            ((unsigned)read_table3[i] + UINT32_C(0xfae87d4e)) ^ UINT32_C(0x55aa55aa));
+    memcpy(tdata_all_buffer->power_of_2_tbl, lhdc_table_power_of_2_table(),
+           sizeof tdata_all_buffer->power_of_2_tbl);
     int extra = channel_frame_bytes < 160 ? 0 : 4;
     tdata_all_buffer->tdata_quant_rem_data_size = extra;
     tdata_all_buffer->target_range =
@@ -77,8 +75,8 @@ void lhdc_shift_by_offset_2(segment_setting_struct *segment, int *input, int *ou
     output[last] = saved;
 }
 
-/* Generate mean-removed segment offsets from the 64-entry integer step table and smooth them.
- * segment_num must be 4..32 and the direction array must contain segment_num-1 entries. */
+/* Generate mean-removed segment offsets from a 64-entry integer step table and smooth them.
+ * The segment count must be 4..32 and the transition-direction array contains segment_num-1 entries. */
 void lhdc_dec_freq_shift(segment_setting_struct *segment, unsigned char *jump, int first_idx,
                          int *data_sft) {
 
@@ -99,12 +97,13 @@ void lhdc_dec_freq_shift(segment_setting_struct *segment, unsigned char *jump, i
                 run = 1;
             }
         }
-        sum += jump[i] ? 0u - (unsigned)lhdc_v5_adsq_step_sizes[first_idx] : (unsigned)lhdc_v5_adsq_step_sizes[first_idx];
+        sum += jump[i] ? 0u - (unsigned)lhdc_v5_adsq_step_sizes[first_idx]
+                       : (unsigned)lhdc_v5_adsq_step_sizes[first_idx];
         ss[i + 1] = audio_math_int32_from_bits(sum);
         total += sum;
     }
     int mean = audio_math_multiply_shift_wrap_i32(audio_math_int32_from_bits(0u - total),
-                                            segment->segment_num_inv, 31);
+                                                  segment->segment_num_inv, 31);
     ss[0] = mean;
     for (int i = 1; i < segment->segment_num; ++i)
         ss[i] = audio_math_int32_from_bits((unsigned)ss[i] + (unsigned)mean);

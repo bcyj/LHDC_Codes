@@ -7,6 +7,12 @@ foreach(v v4 v5)
   lhdc_version_objects(lhdc_encoder_${v}_objects ${v})
   target_compile_definitions(lhdc_encoder_${v}_objects PRIVATE
     LHDC_ENCODER_WITH_AR=$<BOOL:${LHDC_ENCODER_WITH_AR}>)
+  if(v STREQUAL "v4")
+    target_compile_definitions(lhdc_encoder_${v}_objects PRIVATE
+      LHDC_ENCODER_HIGH_PERFORMANCE_SSE=$<BOOL:${LHDC_ENCODER_HIGH_PERFORMANCE_SSE}>
+      LLAC_QUANT_FAST_RECIPROCAL=$<BOOL:${LHDC_ENCODER_HIGH_PERFORMANCE_SSE}>
+      LHDC_LLAC_FAST_RECIPROCAL=$<BOOL:${LHDC_ENCODER_HIGH_PERFORMANCE_SSE}>)
+  endif()
   if(v STREQUAL "v5")
     target_compile_definitions(lhdc_encoder_${v}_objects PRIVATE
       LHDC_V5_ENCODER_FIXED_FFT=$<BOOL:${LHDC_V5_ENCODER_FIXED_FFT}>)

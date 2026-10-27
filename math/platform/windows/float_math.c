@@ -14,12 +14,11 @@
 /* Select reduced sine signs by quadrant, shared by joint and single-component entries. */
 static const double audio_math_win_sine_quadrant_sign[4] = {1.0, -1.0, -1.0, 1.0};
 
-
-
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-/* Return float natural exponent using the 64-segment SSE2 cubic model without CRT.
- * Nearest-even rounding with preserved subnormals; return values only, no errno/exceptions.
- * Both AR callers use only 1-result; this final weight is separately verified against FMA hosts. */
+/* Return the single-precision natural exponential through an SSE2 64-segment cubic model
+ * without CRT calls. It rounds to nearest-even and preserves subnormals; only the result is
+ * specified, without emulating errno or exception flags. The two AR callers use 1-result;
+ * that final weight is separately validated against the FMA host implementation. */
 float audio_math_windows_expf_sse2_soft(float input) {
     uint32_t bits = audio_math_float32_bits_sse2(input);
     uint32_t magnitude = bits & AUDIO_MATH_FLOAT32_MAGNITUDE_BITS;
@@ -33,15 +32,17 @@ float audio_math_windows_expf_sse2_soft(float input) {
         return audio_math_float32_from_bits(AUDIO_MATH_FLOAT32_INFINITY_BITS);
     if (scaled < AUDIO_MATH_WIN_EXPF_UNDERFLOW_SCALED_F64)
         return 0.0f;
-    /* x64 baseline SSE2 generates bounded segment indices directly under MXCSR nearest-even.
-     * As for remaining operations, default rounding and gradual underflow are required. */
+    /* x64-mandatory SSE2 generates the bounded segment index directly under MXCSR
+     * nearest-even mode. Like the remaining operations, this requires default rounding
+     * and gradual underflow. */
     int nearest = _mm_cvtsd_si32(_mm_set_sd(scaled));
     unsigned index = (unsigned)nearest & (AUDIO_MATH_WIN_EXPF_SEGMENTS - 1u);
     int exponent = (nearest - (int)index) / AUDIO_MATH_WIN_EXPF_SEGMENTS;
     double reduced = (double)input - (double)nearest * AUDIO_MATH_WIN_EXPF_REDUCTION_STEP_F64;
     double polynomial = reduced * AUDIO_MATH_WIN_EXPF_CUBIC_F64 + 0.5;
     polynomial = (reduced * reduced) * polynomial + reduced;
-    double value = polynomial * audio_math_win_expf_sse2_table[index] + audio_math_win_expf_sse2_table[index];
+    double value =
+        polynomial * audio_math_win_expf_sse2_table[index] + audio_math_win_expf_sse2_table[index];
     double scale = audio_math_float64_from_bits((uint64_t)(unsigned)(exponent + 1023) << 52);
     return (float)(value * scale);
 }
@@ -85,8 +86,9 @@ void audio_math_win_sincosf(float input, float *sine, float *cosine) {
     if (top >= 0x3f4) {
         if (top < 0x42f) {
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-            /* Float input products in this branch never land on half-integers, so RNE and ties-away agree.
-             * Assumes 0.75 <= |input| < 120, specified 2/pi bits, and default rounding. */
+            /* Products in this branch cannot land on a half integer, so nearest-even and
+             * away-from-zero rules agree. Constraints are 0.75 <= |input| < 120, the fixed
+             * 2/pi bit pattern, and default rounding. */
             n = _mm_cvtsd_si32(_mm_set_sd(x * AUDIO_MATH_TWO_OVER_PI_F64));
             double nearest = (double)n;
 #else
@@ -113,15 +115,16 @@ void audio_math_win_sincosf(float input, float *sine, float *cosine) {
     x *= audio_math_win_sine_quadrant_sign[quadrant & 3];
     double fourth = square * square, cube = square * x;
     double fifth = square * cube, sixth = square * fourth;
-    /* Skip fused polynomials when conservative intervals determine both float bit patterns;
-     * near either rounding boundary, evaluate fused polynomials without changing reduction/quadrants. */
+    /* Skip the fused polynomial when a conservative interval determines both float bit patterns;
+     * near either rounding boundary, use the fused polynomial without changing reduction/quadrant. */
     double fast_sin_low = cube * AUDIO_MATH_WIN_SIN_C3_F64 + x;
     double fast_sin_high = square * AUDIO_MATH_WIN_SIN_C7_F64 + AUDIO_MATH_WIN_SIN_C5_F64;
     double fast_cosine_sign = (quadrant & 2) ? -1.0 : 1.0;
-    double fast_cos_low = square * (fast_cosine_sign * AUDIO_MATH_WIN_COS_C2_F64) + fast_cosine_sign;
+    double fast_cos_low =
+        square * (fast_cosine_sign * AUDIO_MATH_WIN_COS_C2_F64) + fast_cosine_sign;
     fast_cos_low = fourth * (fast_cosine_sign * AUDIO_MATH_WIN_COS_C4_F64) + fast_cos_low;
-    double fast_cos_high =
-        square * (fast_cosine_sign * AUDIO_MATH_WIN_COS_C8_F64) + fast_cosine_sign * AUDIO_MATH_WIN_COS_C6_F64;
+    double fast_cos_high = square * (fast_cosine_sign * AUDIO_MATH_WIN_COS_C8_F64) +
+                           fast_cosine_sign * AUDIO_MATH_WIN_COS_C6_F64;
     double sin_estimate = fifth * fast_sin_high + fast_sin_low;
     double cos_estimate = sixth * fast_cos_high + fast_cos_low;
     float sin_lower = (float)(sin_estimate - AUDIO_MATH_WIN_TRIG_ROUND_GUARD_F64);
@@ -135,19 +138,20 @@ void audio_math_win_sincosf(float input, float *sine, float *cosine) {
         return;
     }
     double sin_low = audio_math_fma_f64(cube, AUDIO_MATH_WIN_SIN_C3_F64, x);
-    double sin_high = audio_math_fma_f64(square, AUDIO_MATH_WIN_SIN_C7_F64, AUDIO_MATH_WIN_SIN_C5_F64);
+    double sin_high =
+        audio_math_fma_f64(square, AUDIO_MATH_WIN_SIN_C7_F64, AUDIO_MATH_WIN_SIN_C5_F64);
     double cosine_sign = (quadrant & 2) ? -1.0 : 1.0;
-    double cos_low = audio_math_fma_f64(square, cosine_sign * AUDIO_MATH_WIN_COS_C2_F64, cosine_sign);
+    double cos_low =
+        audio_math_fma_f64(square, cosine_sign * AUDIO_MATH_WIN_COS_C2_F64, cosine_sign);
     cos_low = audio_math_fma_f64(fourth, cosine_sign * AUDIO_MATH_WIN_COS_C4_F64, cos_low);
-    double cos_high =
-        audio_math_fma_f64(square, cosine_sign * AUDIO_MATH_WIN_COS_C8_F64, cosine_sign * AUDIO_MATH_WIN_COS_C6_F64);
+    double cos_high = audio_math_fma_f64(square, cosine_sign * AUDIO_MATH_WIN_COS_C8_F64,
+                                         cosine_sign * AUDIO_MATH_WIN_COS_C6_F64);
     float s = (float)audio_math_fma_f64(fifth, sin_high, sin_low);
     float c = (float)audio_math_fma_f64(sixth, cos_high, cos_low);
     *sine = (n & 1) ? c : s;
     *cosine = (n & 1) ? s : c;
 }
 
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
 /* Compute only the required float trig component, retaining joint-entry reduction/rounding policy. */
 static float trig_single_f32(float input, unsigned cosine) {
     uint32_t bits = audio_math_win_float_bits(input), top = (bits >> 20) & 0x7ff;
@@ -157,10 +161,16 @@ static float trig_single_f32(float input, unsigned cosine) {
     int n = 0;
     if (top >= 0x3f4) {
         if (top < 0x42f) {
+#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
             n = _mm_cvtsd_si32(_mm_set_sd(x * AUDIO_MATH_TWO_OVER_PI_F64));
             double nearest = (double)n;
             x = (x - nearest * AUDIO_MATH_WIN_REDUCE_HALF_PI_HIGH_F64) -
                 nearest * AUDIO_MATH_WIN_REDUCE_HALF_PI_LOW_F64;
+#else
+            double nearest = audio_math_round_f64(x * AUDIO_MATH_TWO_OVER_PI_F64);
+            n = audio_math_truncate_i32_f64(nearest);
+            x = audio_math_fma_f64(-AUDIO_MATH_HALF_PI_F64, nearest, x);
+#endif
         } else if (top < 0x7f8) {
             x = audio_math_win_reduce_large(bits, &n);
         } else {
@@ -184,7 +194,8 @@ static float trig_single_f32(float input, unsigned cosine) {
             return lower;
         low = audio_math_fma_f64(square, sign * AUDIO_MATH_WIN_COS_C2_F64, sign);
         low = audio_math_fma_f64(fourth, sign * AUDIO_MATH_WIN_COS_C4_F64, low);
-        high = audio_math_fma_f64(square, sign * AUDIO_MATH_WIN_COS_C8_F64, sign * AUDIO_MATH_WIN_COS_C6_F64);
+        high = audio_math_fma_f64(square, sign * AUDIO_MATH_WIN_COS_C8_F64,
+                                  sign * AUDIO_MATH_WIN_COS_C6_F64);
     } else {
         x *= audio_math_win_sine_quadrant_sign[quadrant & 3];
         double cube = square * x;
@@ -201,28 +212,15 @@ static float trig_single_f32(float input, unsigned cosine) {
     }
     return (float)audio_math_fma_f64(multiplier, high, low);
 }
-#endif
 
 /* Output float sine with the baseline platform's evaluation order. */
 float audio_math_win_sinf(float input) {
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
     return trig_single_f32(input, 0);
-#else
-    float sine, cosine;
-    audio_math_win_sincosf(input, &sine, &cosine);
-    return sine;
-#endif
 }
 
 /* Output float cosine with the baseline platform's evaluation order. */
 float audio_math_win_cosf(float input) {
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
     return trig_single_f32(input, 1);
-#else
-    float sine, cosine;
-    audio_math_win_sincosf(input, &sine, &cosine);
-    return cosine;
-#endif
 }
 /* Construct floating-point values from bit patterns. */
 static inline float audio_math_win_float_value(uint32_t bits) {
@@ -258,8 +256,9 @@ float audio_math_win_exp2f(float input) {
 #endif
     double reduced = (double)input - (shifted - AUDIO_MATH_WIN_INTEGER_ROUND_BIAS_F64);
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-    /* Even entries of the 64-segment natural-exponent table are 2^(i/32). Split encoded's low five bits
-     * and add integer exponent bits directly using modulo-2^64 table encoding operations. */
+    /* Even entries of the 64-segment exponential table are 2^(i/32). Split the low five bits
+     * from encoded, add the integer exponent bits directly, and perform encoded-table arithmetic
+     * modulo 2^64. */
     unsigned index = (unsigned)encoded & 31u;
     uint64_t scale_bits;
     memcpy(&scale_bits, &audio_math_win_expf_sse2_table[2u * index], sizeof scale_bits);
@@ -269,16 +268,18 @@ float audio_math_win_exp2f(float input) {
 #endif
     double scale;
     memcpy(&scale, &scale_bits, sizeof scale);
-    /* Ordinary/fused polynomial evaluations differ by less than 2^-48. Accept only when both scaled
-     * interval endpoints round to the same float; otherwise evaluate fused operations. */
+    /* The ordinary and fused polynomial values differ by less than 2^-48. Accept the ordinary
+     * result only when both scaled interval endpoints round to the same float; otherwise use FMA. */
     double fast_upper = AUDIO_MATH_WIN_EXP2_C3_F64 * reduced + AUDIO_MATH_WIN_EXP2_C2_F64;
     double fast_lower = reduced * AUDIO_MATH_WIN_EXP2_C1_F64 + 1.0;
     double estimate = (reduced * reduced) * fast_upper + fast_lower;
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-    /* Evaluate double endpoints in parallel through addition/subtraction and scaling; the low lane holds the lower bound.
-     * CVTPD2PS rounds each lane; compare bits, preserving signed zero, and fall back to fused evaluation if uncertain. */
-    __m128d interval = _mm_add_pd(_mm_set1_pd(estimate),
-        _mm_set_pd(AUDIO_MATH_WIN_EXP2_ROUND_GUARD_F64, -AUDIO_MATH_WIN_EXP2_ROUND_GUARD_F64));
+    /* Compute the two double endpoints in parallel using the same add/subtract/scale order; the
+     * low lane is the lower bound. CVTPD2PS rounds each lane, and bit comparison preserves signed
+     * zero. An indeterminate interval falls back to fused evaluation. */
+    __m128d interval =
+        _mm_add_pd(_mm_set1_pd(estimate), _mm_set_pd(AUDIO_MATH_WIN_EXP2_ROUND_GUARD_F64,
+                                                     -AUDIO_MATH_WIN_EXP2_ROUND_GUARD_F64));
     interval = _mm_mul_pd(interval, _mm_set1_pd(scale));
     __m128 rounded = _mm_cvtpd_ps(interval);
     uint64_t endpoints = (uint64_t)_mm_cvtsi128_si64(_mm_castps_si128(rounded));
@@ -290,13 +291,14 @@ float audio_math_win_exp2f(float input) {
     if (audio_math_win_float_bits(rounded_lower) == audio_math_win_float_bits(rounded_upper))
         return rounded_lower;
 #endif
-    double upper = audio_math_fma_f64(AUDIO_MATH_WIN_EXP2_C3_F64, reduced, AUDIO_MATH_WIN_EXP2_C2_F64);
+    double upper =
+        audio_math_fma_f64(AUDIO_MATH_WIN_EXP2_C3_F64, reduced, AUDIO_MATH_WIN_EXP2_C2_F64);
     double lower = audio_math_fma_f64(reduced, AUDIO_MATH_WIN_EXP2_C1_F64, 1.0);
     return (float)(audio_math_fma_f64(reduced * reduced, upper, lower) * scale);
 }
 
-/* Compute float log2, returning directly when a conservative double interval determines float rounding;
- * near boundaries, use fused reduction/polynomials. */
+/* Compute a single-precision base-2 logarithm. Return directly when a conservative double interval
+ * determines float rounding; use fused reduction and polynomial near rounding boundaries. */
 float audio_math_win_log2f(float input) {
     uint32_t bits = audio_math_win_float_bits(input);
     if (bits == 0x3f800000)
@@ -314,8 +316,8 @@ float audio_math_win_log2f(float input) {
     unsigned index = (relative >> 19) & 15;
     int exponent = (int32_t)relative >> 23;
     double normalized = audio_math_win_float_value(bits - (relative & 0xff800000));
-    /* Ordinary double evaluation has absolute error below 2^-42. Accept only if both endpoints round to one
-     * float; otherwise evaluate fused operations. Default nearest-even rounding is required. */
+    /* Ordinary double evaluation has absolute error below 2^-42. Accept it only when both interval
+     * endpoints round to the same float; otherwise use fused evaluation. Rounding is nearest-even. */
     double fast_reduced = audio_math_win_log2_table[index][0] * normalized - 1.0;
     double fast_square = fast_reduced * fast_reduced;
     double fast_polynomial = AUDIO_MATH_WIN_LOG2_C3_F64 * fast_reduced + AUDIO_MATH_WIN_LOG2_C2_F64;
@@ -330,9 +332,9 @@ float audio_math_win_log2f(float input) {
     double reduced = audio_math_fma_f64(audio_math_win_log2_table[index][0], normalized, -1.0);
     double base = audio_math_win_log2_table[index][1] + exponent;
     double square = reduced * reduced;
-    double polynomial = audio_math_fma_f64(AUDIO_MATH_WIN_LOG2_C3_F64, reduced, AUDIO_MATH_WIN_LOG2_C2_F64);
+    double polynomial =
+        audio_math_fma_f64(AUDIO_MATH_WIN_LOG2_C3_F64, reduced, AUDIO_MATH_WIN_LOG2_C2_F64);
     polynomial = audio_math_fma_f64(AUDIO_MATH_WIN_LOG2_C4_F64, square, polynomial);
     double linear = audio_math_fma_f64(AUDIO_MATH_WIN_LOG2_C1_F64, reduced, base);
     return (float)audio_math_fma_f64(square, polynomial, linear);
 }
-

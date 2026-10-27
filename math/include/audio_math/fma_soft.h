@@ -26,15 +26,15 @@ double audio_math_fma_soft_f64(double a, double b, double c);
 #define audio_math_fma_f64_from_bits audio_math_float64_from_bits
 #endif
 
-/* Compute binary32 FMA through a provably safe double fast path.
- * The 48-bit product of finite binary32 operands is exactly representable in binary64.
- * A double sum at a float midpoint may lose decisive low bits and must fall back;
- * subnormals, zero, near-overflow, and nonfinite inputs also use exact integer single rounding.
- * This does not unconditionally replace FMA with (float)((double)a*b+c).
+/* Compute binary32 fused multiply-add through a provably safe double fast path.
+ * The 48-bit product of two finite binary32 values is exact in binary64. A double sum exactly
+ * at a float midpoint can lose direction-selecting low bits and must fall back. Subnormal,
+ * zero, near-overflow, and nonfinite cases also use the integer single-rounding algorithm.
+ * This is not an unconditional replacement of FMA with (float)((double)a*b+c).
  */
 static inline float audio_math_fma_soft_f32(float a, float b, float c) {
     double sum = (double)a * (double)b + (double)c;
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
     /* Positive finite magnitude bits follow numeric order; nonfinite values also exceed the bound and fall back. */
     uint64_t bits = audio_math_fma_f64_bits(sum);
     uint64_t magnitude = bits & AUDIO_MATH_FLOAT64_MAGNITUDE_BITS;
@@ -42,6 +42,7 @@ static inline float audio_math_fma_soft_f32(float a, float b, float c) {
         magnitude > AUDIO_MATH_FLOAT64_FLOAT32_MAX_FINITE_BITS)
         return audio_math_fma_exact_f32(a, b, c);
 #else
+    /* Numeric comparisons generate fewer ARM instructions and avoid moving double bit patterns solely for classification. */
     double magnitude = audio_math_abs_f64(sum);
     if (!(magnitude >= (double)AUDIO_MATH_MIN_NORMAL_F32 &&
           magnitude <= (double)AUDIO_MATH_MAX_FINITE_F32))
@@ -50,11 +51,12 @@ static inline float audio_math_fma_soft_f32(float a, float b, float c) {
 #endif
     if ((bits & UINT64_C(0x1fffffff)) == UINT64_C(0x10000000))
         return audio_math_fma_exact_f32(a, b, c);
-    /* Win32 returns through x87; explicitly round to binary32 without excess return precision. */
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-    /* x64 returns are already binary32-rounded, requiring no volatile spill/reload. */
+#if (defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)) ||      \
+    defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_M_ARM64)
+    /* 64-bit targets return register values rounded to binary32 without a volatile spill/reload. */
     return (float)sum;
 #else
+    /* Win32 x86 uses x87; explicitly spill to binary32 to discard excess 80-bit precision. */
     volatile float rounded = (float)sum;
     return rounded;
 #endif

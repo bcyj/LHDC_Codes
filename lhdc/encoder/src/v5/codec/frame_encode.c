@@ -204,14 +204,15 @@ static int32_t write_channel_frame(LhdcEncContext *ecb, LHDCV5_Workspace *worksp
         BitWriter *ptr_bw = v5f_lhdc_v5_get_mem_content_addr(workspace, BW_INDEX);
         v5_bw_init_inline(ptr_bw, output, ecb->enc_frm_len);
         fac_enc *ptr_fenc_s = v5f_lhdc_v5_get_mem_content_addr(workspace, FENC_S_INDEX);
-        ptr_bw = v5f_lhdc_v5_get_mem_content_addr(workspace, BW_INDEX);
-        uint32_t rtn = v5_bw_write_uint_inline(ptr_bw, 0, 1);
-        rtn |= v5_bw_write_uint_inline(ptr_bw, ecb->chd[ch].gi, 9);
-        rtn |= v5_bw_write_uint_inline(ptr_bw, ecb->ed.adsq_index0 - 8, 4);
+        uint32_t header14 = (((uint32_t)ecb->chd[ch].gi & 0x1FFu) << 4) |
+                            ((uint32_t)(ecb->ed.adsq_index0 - 8) & 0x0Fu);
+        uint32_t rtn = v5_bw_write_uint_inline(ptr_bw, header14, 14);
         rtn |= v5f_BitWriteBitsArrayU8(ptr_bw, ecb->ed.adsq_code, 1, ecb->band_cfg->n - 1, 0);
-        rtn |= v5_bw_write_uint_inline(ptr_bw, (bpc->nzc >> 1) - 1, ecb->nzc_bits);
-        rtn |= v5_bw_write_uint_inline(ptr_bw, bpc->alpha, 1);
-        rtn |= v5_bw_write_uint_inline(ptr_bw, bpc->rb[0], ecb->init_bn_bits);
+        uint32_t nzc_val = (uint32_t)((bpc->nzc >> 1) - 1) & (UINT32_MAX >> (32 - ecb->nzc_bits));
+        uint32_t bpc_header = (nzc_val << (1 + ecb->init_bn_bits)) |
+                              (((uint32_t)bpc->alpha & 1u) << ecb->init_bn_bits) |
+                              ((uint32_t)bpc->rb[0] & (UINT32_MAX >> (32 - ecb->init_bn_bits)));
+        rtn |= v5_bw_write_uint_inline(ptr_bw, bpc_header, ecb->nzc_bits + 1 + ecb->init_bn_bits);
         rtn |= v5f_BitsPredictCompressOutput(ecb, ptr_fenc_s, ptr_bw);
         int32_t nzc = bpc->nzc, side_bits = bpc->sp_enc_bits, bits = 0;
         uint32_t u32 = 0, empty = 32;

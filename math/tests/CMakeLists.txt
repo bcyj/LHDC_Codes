@@ -1,5 +1,5 @@
 foreach(name float_rounding float_scaling float_remainder float_sqrt double_sqrt fma
-             math_backend math_host)
+             math_backend math_host fft_sse)
   set(sources ${name}_test.c)
   if(name STREQUAL "math_backend" OR name STREQUAL "math_host" OR name STREQUAL "trig_host")
     list(APPEND sources ${name}_reference.c)

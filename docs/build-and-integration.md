@@ -32,6 +32,8 @@ Use separate architecture directories. Do not enable fast-math or change contrac
 | `LHDC_BUILD_TESTS` | `OFF` | Self-contained functional/numeric tests |
 | `LHDC_ENABLE_LOGGING` | `OFF` | Diagnostic output and argument evaluation |
 | `LHDC_V5_ENCODER_FIXED_FFT` | `OFF` | Optional fixed FFT in V5 encoding MDCT |
+| `LHDC_ENCODER_HIGH_PERFORMANCE_SSE` | `OFF` | Faster non-bit-exact encoder approximations |
+| `LHDC_AR_HIGH_PERFORMANCE_SSE` | `OFF` | Faster non-bit-exact split-radix SSE path for AR |
 | `LHDC_KISS_FFT_ITERATIVE_STATIC` | `OFF` | Iterative static floating FFT |
 | `LHDC_EXTERNAL_ALLOCATOR_ONLY` | `OFF` | Disable default CRT heap; require workspace/allocator |
 | `LHDC_DRIVER_RESOURCES` | `OFF` | Combine iterative FFT, explicit allocation, and disabled logs |
@@ -39,6 +41,10 @@ Use separate architecture directories. Do not enable fast-math or change contrac
 | `AR_DEFAULT_BACKEND` | `LHDC` | Generic PCM default backend; may be `NONE` |
 
 The driver-resource combination requires Release/`NDEBUG` and rejects conflicting explicit recursive FFT, default allocation, or enabled logging.
+
+The exact FFT SSE2 path is enabled by default. The two `HIGH_PERFORMANCE_SSE` options are separate,
+default-off alternatives because they can change encoded bytes or AR PCM rounding. Do not enable
+them in a byte-identity baseline. See [Performance Optimizations](performance-optimizations.md).
 
 Encoder only:
 
@@ -83,7 +89,10 @@ msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:P
 
 VS2022 v143 users may add `/p:PlatformToolset=v143`. Output defaults to `build/windows/`; override with `LhdcOutputRoot`, `DecoderEvidenceRoot`, and `AudioMathOutputRoot`.
 
-Optional properties include `LhdcV5EncoderFixedFft=1`, `LhdcKissFftIterativeStatic=1`, and `LhdcDriverResources=1`. Direct static linking must include common math/component dependencies; prefer public CMake targets for dependency management.
+Optional properties include `LhdcV5EncoderFixedFft=1`, `LhdcKissFftIterativeStatic=1`, and
+`LhdcDriverResources=1`. The high-performance switches are currently CMake options; their default
+exact optimizations require no MSBuild property. Direct static linking must include common
+math/component dependencies; prefer public CMake targets for dependency management.
 
 ## Android NDK
 

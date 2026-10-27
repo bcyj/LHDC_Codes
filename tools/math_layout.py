@@ -7,7 +7,7 @@ MODULE=REPO/'lhdc'
 
 def math_sources(windows=False):
     result=[REPO/'math/src'/name for name in ['fma_soft.c','float_exp.c','float_sine.c',
-        'fft_float32.c','fft_float32_tables.c']]
+        'fft_float32.c','fft_float32_tables.c','fft_sse.c']]
     if windows:
         result += sorted((REPO/'math/platform/windows').glob('*.c'))
     return result

@@ -61,6 +61,18 @@ static inline void audio_math_write_le_bytes(void *ptr, uint32_t value, unsigned
         output[i] = (uint8_t)(value >> (8 * i));
 }
 
+/* Read a big-endian 16-bit integer from an arbitrary byte address. */
+static inline uint16_t audio_math_read_be16(const void *ptr) {
+    const uint8_t *bytes = (const uint8_t *)ptr;
+    return (uint16_t)((uint16_t)bytes[0] << 8 | (uint16_t)bytes[1]);
+}
+
+/* Read a big-endian 24-bit integer from an arbitrary byte address and zero-extend it. */
+static inline uint32_t audio_math_read_be24(const void *ptr) {
+    const uint8_t *bytes = (const uint8_t *)ptr;
+    return (uint32_t)bytes[0] << 16 | (uint32_t)bytes[1] << 8 | (uint32_t)bytes[2];
+}
+
 /* Read a big-endian 32-bit integer from any byte address. */
 static inline uint32_t audio_math_read_be32(const void *ptr) {
     const uint8_t *bytes = (const uint8_t *)ptr;

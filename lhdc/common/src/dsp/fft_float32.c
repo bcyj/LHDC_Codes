@@ -5,7 +5,7 @@
 
 /* Prepare generic-radix scratch for calls lacking it, then enter the allocation-free shared kernel. */
 void lhdc_kiss_fft_work(kiss_fft_cpx *output, const kiss_fft_cpx *input, size_t twiddle_stride,
-                      int32_t input_stride, const int32_t *factors, const LhdcKissFftPlan *plan) {
+                        int32_t input_stride, const int32_t *factors, const LhdcKissFftPlan *plan) {
     LhdcKissFftPlan local = *plan;
     kiss_fft_cpx *allocated = NULL;
     if (plan->allow_generic_radix && !plan->generic_scratch) {
@@ -61,3 +61,37 @@ int lhdc_kiss_fft_split(float *real, float *imag, int32_t length, int32_t stride
     return 0;
 }
 
+/* Convenience split-channel power-of-two complex FFT entry point, optionally using the
+ * split-radix vector kernel. */
+int lhdc_kiss_fft_power2_split(float *real, float *imag, int32_t length, int32_t stride,
+                               int inverse, int normalize) {
+    if (!real || !imag || length < 4 || stride < 1 ||
+        (size_t)length > SIZE_MAX / (2 * sizeof(kiss_fft_cpx)))
+        return -1;
+#if AUDIO_MATH_HAS_FFT_SSE
+    if (!audio_math_fft_sse_supported(length))
+        return lhdc_kiss_fft_split(real, imag, length, stride, inverse, normalize);
+
+    kiss_fft_cpx *memory = lhdc_memory_alloc(NULL, (size_t)length * 2 * sizeof *memory);
+    if (!memory)
+        return -1;
+    kiss_fft_cpx *input = memory, *scratch = memory + length;
+    for (int32_t sample = 0; sample < length; ++sample) {
+        size_t index = (size_t)sample * stride;
+        input[sample] = (kiss_fft_cpx){real[index], imag[index]};
+    }
+    if (!audio_math_fft_power2(input, input, scratch, length, inverse != 0)) {
+        lhdc_memory_free(memory);
+        return -1;
+    }
+    for (int32_t sample = 0; sample < length; ++sample) {
+        size_t index = (size_t)sample * stride;
+        real[index] = inverse && normalize ? input[sample].r / (float)length : input[sample].r;
+        imag[index] = inverse && normalize ? input[sample].i / (float)length : input[sample].i;
+    }
+    lhdc_memory_free(memory);
+    return 0;
+#else
+    return lhdc_kiss_fft_split(real, imag, length, stride, inverse, normalize);
+#endif
+}

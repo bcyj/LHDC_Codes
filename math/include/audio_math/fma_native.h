@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-/* ARM uses hardware or Android-optimized entries; other platforms inline the software fast path. */
+/* Prefer the target's native fused multiply-add, otherwise inline the software fast path. */
 static inline float audio_math_fma_f32(float a, float b, float c) {
 #if AUDIO_MATH_PLATFORM_NATIVE_FMA
     return audio_math_platform_fma_f32(a, b, c);
@@ -15,7 +15,7 @@ static inline float audio_math_fma_f32(float a, float b, float c) {
 #endif
 }
 
-/* ARM uses native/system fused multiply-add; other platforms use the common integer backend. */
+/* Prefer native double-precision fused multiply-add, otherwise use the common integer backend. */
 static inline double audio_math_fma_f64(double a, double b, double c) {
 #if AUDIO_MATH_PLATFORM_NATIVE_FMA
     return audio_math_platform_fma_f64(a, b, c);

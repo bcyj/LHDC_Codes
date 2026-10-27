@@ -5,9 +5,9 @@
 #endif
 
 /* Select dictionary slots from high bits of a little-endian four-byte multiplicative hash to reduce low-bit collisions. */
-static unsigned hash_prefix(const uint8_t *input) {
-    uint32_t word = (uint32_t)input[0] | (uint32_t)input[1] << 8 | (uint32_t)input[2] << 16 |
-                    (uint32_t)input[3] << 24;
+static inline unsigned hash_prefix(const uint8_t *input) {
+    uint32_t word;
+    memcpy(&word, input, sizeof word);
     return (word * LHDC_V4_LZH_HASH_MULTIPLIER) >> (32u - LHDC_V4_LZH_HASH_BITS);
 }
 
@@ -93,7 +93,9 @@ static uint32_t encode_or_measure(LhdcV4LzhWorkspace *workspace, const uint8_t *
     unsigned position = 0, anchor = 0, written = 0;
     /* Keep three trailing bytes so every inserted match position has a readable four-byte prefix. */
     while (position + LHDC_V4_LZH_MIN_MATCH + 3u <= size) {
-        unsigned slot = hash_prefix(input + position);
+        uint32_t w_cur;
+        memcpy(&w_cur, input + position, sizeof w_cur);
+        unsigned slot = (w_cur * LHDC_V4_LZH_HASH_MULTIPLIER) >> (32u - LHDC_V4_LZH_HASH_BITS);
         unsigned candidate = workspace->positions[slot];
         workspace->positions[slot] = (uint16_t)(position + 1u);
         unsigned length = 0, distance = 0;
@@ -102,10 +104,13 @@ static uint32_t encode_or_measure(LhdcV4LzhWorkspace *workspace, const uint8_t *
             limit = LHDC_V4_LZH_MAX_MATCH;
         if (candidate) {
             unsigned reference = candidate - 1u;
-            if (reference < position && position - reference <= LHDC_V4_LZH_MAX_DISTANCE &&
-                memcmp(input + position, input + reference, LHDC_V4_LZH_MIN_MATCH) == 0) {
-                length = match_length(input + position, input + reference, limit);
-                distance = position - reference;
+            if (reference < position && position - reference <= LHDC_V4_LZH_MAX_DISTANCE) {
+                uint32_t w_ref;
+                memcpy(&w_ref, input + reference, sizeof w_ref);
+                if (w_cur == w_ref) {
+                    length = match_length(input + position, input + reference, limit);
+                    distance = position - reference;
+                }
             }
         }
         if (!length) {

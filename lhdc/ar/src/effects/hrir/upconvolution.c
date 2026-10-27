@@ -3,6 +3,7 @@
 #define _GNU_SOURCE
 #endif
 #include "../../core/include/ar_internal.h"
+#include "../../core/include/ar_fft_backend.h"
 #include "../../core/include/ar_workspace_views.h"
 #include <string.h>
 
@@ -37,27 +38,69 @@ void LHDC_FN(hrir_upconv_process)(PST_LHDC_AR state, int32_t sample_offset) {
         LHDC_FN(fft_buffer_n_to_4n)
         (inputs[source_channel], workspace->input_history[source_channel], data,
          LHDC_CONST(AR_BLOCK_SAMPLES), LHDC_CONST(AR_SPECTRUM_FLOATS));
-        audio_math_fft_512(data, 0, workspace->fft_work);
+        lhdc_ar_fft_512(data, 0, workspace->fft_work);
+        float gain = ch_mix_gain[index[source_channel]];
+#if defined(LHDC_AR_COMPLEX_USE_SSE2)
+        __m128 v_gain = _mm_set1_ps(gain);
+        int32_t i = 0;
+        for (; i <= LHDC_CONST(AR_SPECTRUM_FLOATS) - 8; i += 8) {
+            __m128 d0 = _mm_loadu_ps(&data[i]);
+            __m128 d1 = _mm_loadu_ps(&data[i + 4]);
+            _mm_storeu_ps(&data[i], _mm_mul_ps(d0, v_gain));
+            _mm_storeu_ps(&data[i + 4], _mm_mul_ps(d1, v_gain));
+        }
+        for (; i < LHDC_CONST(AR_SPECTRUM_FLOATS); ++i)
+            data[i] *= gain;
+#else
         for (int32_t i = 0; i < LHDC_CONST(AR_SPECTRUM_FLOATS); ++i)
-            data[i] *= ch_mix_gain[index[source_channel]];
+            data[i] *= gain;
+#endif
         for (int32_t ear = 0; ear < 2; ++ear) {
             LHDC_FN(fft_buffer_n_to_4n)
             (coefs[source_channel][ear], 0, kernel, LHDC_CONST(AR_BLOCK_SAMPLES),
              LHDC_CONST(AR_SPECTRUM_FLOATS));
-            audio_math_fft_512(kernel, 0, workspace->fft_work);
+            lhdc_ar_fft_512(kernel, 0, workspace->fft_work);
             LHDC_PRIVATE(accumulate_complex_spectrum)(sums[ear], data, kernel);
         }
     }
     float *out[2] = {l_out_frame, r_out_frame};
     for (int32_t ear = 0; ear < 2; ++ear) {
-        audio_math_fft_512(sums[ear], 1, workspace->fft_work);
+        lhdc_ar_fft_512(sums[ear], 1, workspace->fft_work);
         for (int32_t i = 0; i < LHDC_CONST(AR_BLOCK_SAMPLES); ++i)
             out[ear][i] = sums[ear][LHDC_CONST(AR_HALF_SPECTRUM_FLOATS) + i * 2];
     }
-    for (int32_t i = 0; i < LHDC_CONST(AR_BLOCK_SAMPLES); ++i) {
-        l_out_frame[i] += ch_mix_gain[3] * lfe_in_frame[i];
-        r_out_frame[i] += ch_mix_gain[3] * lfe_in_frame[i];
+    float lfe_gain = ch_mix_gain[3];
+#if defined(LHDC_AR_COMPLEX_USE_SSE2)
+    __m128 v_lfe_gain = _mm_set1_ps(lfe_gain);
+    int32_t i = 0;
+    for (; i <= LHDC_CONST(AR_BLOCK_SAMPLES) - 8; i += 8) {
+        __m128 lfe0 = _mm_loadu_ps(&lfe_in_frame[i]);
+        __m128 lfe1 = _mm_loadu_ps(&lfe_in_frame[i + 4]);
+        __m128 l0 = _mm_loadu_ps(&l_out_frame[i]);
+        __m128 l1 = _mm_loadu_ps(&l_out_frame[i + 4]);
+        __m128 r0 = _mm_loadu_ps(&r_out_frame[i]);
+        __m128 r1 = _mm_loadu_ps(&r_out_frame[i + 4]);
+
+        __m128 add0 = _mm_mul_ps(lfe0, v_lfe_gain);
+        __m128 add1 = _mm_mul_ps(lfe1, v_lfe_gain);
+
+        _mm_storeu_ps(&l_out_frame[i], _mm_add_ps(l0, add0));
+        _mm_storeu_ps(&l_out_frame[i + 4], _mm_add_ps(l1, add1));
+        _mm_storeu_ps(&r_out_frame[i], _mm_add_ps(r0, add0));
+        _mm_storeu_ps(&r_out_frame[i + 4], _mm_add_ps(r1, add1));
     }
+    for (; i < LHDC_CONST(AR_BLOCK_SAMPLES); ++i) {
+        float lfe_val = lfe_gain * lfe_in_frame[i];
+        l_out_frame[i] += lfe_val;
+        r_out_frame[i] += lfe_val;
+    }
+#else
+    for (int32_t i = 0; i < LHDC_CONST(AR_BLOCK_SAMPLES); ++i) {
+        float lfe_val = lfe_gain * lfe_in_frame[i];
+        l_out_frame[i] += lfe_val;
+        r_out_frame[i] += lfe_val;
+    }
+#endif
 }
 
 /* Partition aligned HRIR-convolution workspace and return its total size. */

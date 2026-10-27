@@ -2,6 +2,7 @@
 #define LHDC_COMMON_SRC_DSP_FFT_FIXED32_H
 #include "../../include/dsp/fft_fixed32.h"
 #include <audio_math/numeric_bits.h>
+#include <audio_math/integer.h>
 /* Perform defined 32-bit modular addition. */
 static inline int32_t add(int32_t a, int32_t b) {
     return audio_math_int32_from_bits((uint32_t)a + (uint32_t)b);
@@ -14,15 +15,16 @@ static inline int32_t sub(int32_t a, int32_t b) {
 
 /* Perform sign-extending right shifts; this module uses only shift counts 1/2. */
 static inline int32_t shift(int32_t value, unsigned bits) {
-    uint32_t shifted = (uint32_t)value >> bits;
-    if (value < 0)
-        shifted |= UINT32_MAX << (32 - bits);
-    return audio_math_int32_from_bits(shifted);
+    return audio_math_shift_right_bounded_i32(value, bits);
 }
 
 /* Compute a safe signed 32-by-32 product and return its 64-bit pattern. */
 static inline uint64_t product(int32_t a, int32_t b) {
+#if defined(_MSC_VER)
+    return (uint64_t)__emul(a, b);
+#else
     return (uint64_t)((int64_t)a * b);
+#endif
 }
 
 /* Add half an LSB modulo 2^64 and extract the middle Q31 word, following arithmetic-shift rules for negatives. */
@@ -64,8 +66,10 @@ static inline LhdcFftFixed32Complex shifted(LhdcFftFixed32Complex value, unsigne
 
 /* Scale radix 3/5 with Q31 reciprocal multiplication. */
 static inline LhdcFftFixed32Complex divided(LhdcFftFixed32Complex value, int32_t divisor) {
-    LhdcFftFixed32Complex c = {multiply(value.r, INT32_MAX / divisor),
-                               multiply(value.i, INT32_MAX / divisor)};
+    int32_t scale = divisor == 3   ? (INT32_MAX / 3)
+                    : divisor == 5 ? (INT32_MAX / 5)
+                                   : (INT32_MAX / divisor);
+    LhdcFftFixed32Complex c = {multiply(value.r, scale), multiply(value.i, scale)};
     return c;
 }
 #endif

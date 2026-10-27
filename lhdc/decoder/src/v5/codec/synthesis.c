@@ -1,16 +1,25 @@
 #include "../../../include/lhdc/decoder/status.h"
 #include "../include/lhdc_fft.h"
 #include <stdbool.h>
+#include <string.h>
 #include "synthesis.h"
 #include "synthesis_tables.h"
+#if (defined(__SSE2__) ||                                                                          \
+     (defined(_MSC_VER) && (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86)))))
+#define LHDC_V5_SYNTHESIS_USE_SSE2 1
+#include <emmintrin.h>
+#else
+#define LHDC_V5_SYNTHESIS_USE_SSE2 0
+#endif
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) &&                           \
     (defined(_M_IX86) || defined(_M_X64))
 #include <audio_math/float_trig.h>
 #include <audio_math/float_window.h>
 #endif
 
-/* Perform pre-rotation, fixed FFT, post-rotation, time rearrangement, window mixing, and history updates.
- * Stages follow integer modular arithmetic and Q31 truncation; all_time_ac selects window mixing.
+/* Perform pre-rotation, fixed-point FFT, post-rotation, time-domain permutation, window mixing,
+ * and history storage. Each stage follows integer modulo arithmetic and Q31 truncation rules;
+ * all_time_ac selects the window-mixing mode.
  */
 void lhdc_dec_lossy_time_operation(void *heap_memory, int *vec_data, int all_time_ac) {
     time_process_top_struct *time_process = heap_memory;
@@ -25,7 +34,27 @@ void lhdc_dec_lossy_time_operation(void *heap_memory, int *vec_data, int all_tim
     int num4 = time_process->num4;
 
     /* Even spectrum entries and reversed odd tail entries form complex FFT input. */
-    for (int i = 0; i < num2; ++i) {
+    int i = 0;
+    for (; i + 2 <= num2; i += 2) {
+        int pdr0 = vec_data[i * 2];
+        int pdi0 = vec_data[num1 - 1 - i * 2];
+        int wr0 = time_process->pre_twid[i].r;
+        int wi0 = time_process->pre_twid[i].i;
+        uint64_t rp0 = time_product(pdr0, wr0) - time_product(pdi0, wi0);
+        uint64_t ip0 = time_product(pdi0, wr0) + time_product(pdr0, wi0);
+        fft_coef_in[i].r = time_q31(rp0);
+        fft_coef_in[i].i = time_q31(ip0);
+
+        int pdr1 = vec_data[(i + 1) * 2];
+        int pdi1 = vec_data[num1 - 1 - (i + 1) * 2];
+        int wr1 = time_process->pre_twid[i + 1].r;
+        int wi1 = time_process->pre_twid[i + 1].i;
+        uint64_t rp1 = time_product(pdr1, wr1) - time_product(pdi1, wi1);
+        uint64_t ip1 = time_product(pdi1, wr1) + time_product(pdr1, wi1);
+        fft_coef_in[i + 1].r = time_q31(rp1);
+        fft_coef_in[i + 1].i = time_q31(ip1);
+    }
+    for (; i < num2; ++i) {
         int pdr_tmp = vec_data[i * 2];
         int pdi_tmp = vec_data[num1 - 1 - i * 2];
         int time_pre_twid_r_tmp = time_process->pre_twid[i].r;
@@ -39,13 +68,41 @@ void lhdc_dec_lossy_time_operation(void *heap_memory, int *vec_data, int all_tim
         fft_coef_in[i].r = time_q31(real_product);
     }
     lhdc_v5_fft(time_process->kiss_fft_cfg, fft_coef_in, fft_coef_out);
-    for (int i = 0; i < num2; ++i) {
-        fft_coef_out[i].r = audio_math_multiply_wrap_i32(num2, fft_coef_out[i].r);
-        fft_coef_out[i].i = audio_math_multiply_wrap_i32(num2, fft_coef_out[i].i);
+    int total_fft_ints = num2 * 2;
+    int *fft_flat = (int *)fft_coef_out;
+    int k = 0;
+    for (; k + 4 <= total_fft_ints; k += 4) {
+        fft_flat[k] = audio_math_multiply_wrap_i32(num2, fft_flat[k]);
+        fft_flat[k + 1] = audio_math_multiply_wrap_i32(num2, fft_flat[k + 1]);
+        fft_flat[k + 2] = audio_math_multiply_wrap_i32(num2, fft_flat[k + 2]);
+        fft_flat[k + 3] = audio_math_multiply_wrap_i32(num2, fft_flat[k + 3]);
+    }
+    for (; k < total_fft_ints; ++k) {
+        fft_flat[k] = audio_math_multiply_wrap_i32(num2, fft_flat[k]);
     }
 
     /* Post-rotation writes evens forward and odds backward; negate before 64-bit truncation. */
-    for (int i = 0; i < num2; ++i) {
+    i = 0;
+    for (; i + 2 <= num2; i += 2) {
+        int cout_r0 = fft_coef_out[i].r;
+        int cout_i0 = fft_coef_out[i].i;
+        int wr0 = time_process->pos_twid[i].r;
+        int wi0 = time_process->pos_twid[i].i;
+        uint64_t rp0 = time_product(cout_r0, wr0) - time_product(cout_i0, wi0);
+        uint64_t ip0 = time_product(cout_i0, wr0) + time_product(cout_r0, wi0);
+        new_frame_data[i * 2] = time_q31(rp0);
+        new_frame_data[num1 - 1 - i * 2] = time_q31(UINT64_C(0) - ip0);
+
+        int cout_r1 = fft_coef_out[i + 1].r;
+        int cout_i1 = fft_coef_out[i + 1].i;
+        int wr1 = time_process->pos_twid[i + 1].r;
+        int wi1 = time_process->pos_twid[i + 1].i;
+        uint64_t rp1 = time_product(cout_r1, wr1) - time_product(cout_i1, wi1);
+        uint64_t ip1 = time_product(cout_i1, wr1) + time_product(cout_r1, wi1);
+        new_frame_data[(i + 1) * 2] = time_q31(rp1);
+        new_frame_data[num1 - 1 - (i + 1) * 2] = time_q31(UINT64_C(0) - ip1);
+    }
+    for (; i < num2; ++i) {
         int cout_r_tmp = fft_coef_out[i].r;
         int cout_i_tmp = fft_coef_out[i].i;
         int time_pos_twid_r_tmp = time_process->pos_twid[i].r;
@@ -58,28 +115,69 @@ void lhdc_dec_lossy_time_operation(void *heap_memory, int *vec_data, int all_tim
         new_frame_data[num1 - 1 - i * 2] = time_q31(UINT64_C(0) - imag_product);
     }
     /* Expand four IMDCT symmetry sections in sequence; merging loops would change overwrite order. */
-    for (int i = 0; i < num2; ++i)
-        time_ac[i] = new_frame_data[num2 + i];
-    for (int i = 0; i < num2; ++i)
-        time_ac[num2 + i] = audio_math_subtract_wrap_i32(0, new_frame_data[num1 - 1 - i]);
-    for (int i = 0; i < num2; ++i)
-        time_ac[num1 + i] = audio_math_subtract_wrap_i32(0, new_frame_data[num2 - 1 - i]);
-    for (int i = 0; i < num2; ++i)
-        time_ac[num1 + num2 + i] = audio_math_subtract_wrap_i32(0, new_frame_data[i]);
+    memcpy(time_ac, new_frame_data + num2, (size_t)num2 * sizeof(int));
+#if LHDC_V5_SYNTHESIS_USE_SSE2
+    const __m128i zero_si = _mm_setzero_si128();
+    int j = 0;
+    for (; j + 4 <= num2; j += 4) {
+        __m128i raw1 = _mm_loadu_si128((const __m128i *)&new_frame_data[num1 - 4 - j]);
+        __m128i rev1 = _mm_shuffle_epi32(raw1, _MM_SHUFFLE(0, 1, 2, 3));
+        _mm_storeu_si128((__m128i *)&time_ac[num2 + j], _mm_sub_epi32(zero_si, rev1));
+    }
+    for (; j < num2; ++j)
+        time_ac[num2 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[num1 - 1 - j]);
+
+    j = 0;
+    for (; j + 4 <= num2; j += 4) {
+        __m128i raw2 = _mm_loadu_si128((const __m128i *)&new_frame_data[num2 - 4 - j]);
+        __m128i rev2 = _mm_shuffle_epi32(raw2, _MM_SHUFFLE(0, 1, 2, 3));
+        _mm_storeu_si128((__m128i *)&time_ac[num1 + j], _mm_sub_epi32(zero_si, rev2));
+    }
+    for (; j < num2; ++j)
+        time_ac[num1 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[num2 - 1 - j]);
+
+    j = 0;
+    for (; j + 4 <= num2; j += 4) {
+        __m128i fwd = _mm_loadu_si128((const __m128i *)&new_frame_data[j]);
+        _mm_storeu_si128((__m128i *)&time_ac[num1 + num2 + j], _mm_sub_epi32(zero_si, fwd));
+    }
+    for (; j < num2; ++j)
+        time_ac[num1 + num2 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[j]);
+#else
+    for (int j = 0; j < num2; ++j)
+        time_ac[num2 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[num1 - 1 - j]);
+    for (int j = 0; j < num2; ++j)
+        time_ac[num1 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[num2 - 1 - j]);
+    for (int j = 0; j < num2; ++j)
+        time_ac[num1 + num2 + j] = audio_math_subtract_wrap_i32(0, new_frame_data[j]);
+#endif
 
     int repeating = time_process->repeating;
     const int *win_hann = time_process->freqency_win;
     if (all_time_ac != 0) {
-        for (int i = 0; i < repeating; ++i) {
-            uint64_t window_product = time_product(time_ac[num4 + i], win_hann[i]) +
-                                      time_product(prev_frame_data[i], win_hann[repeating - 1 - i]);
-            vec_data[i] = time_q31(window_product);
+        int wj = 0;
+        for (; wj + 2 <= repeating; wj += 2) {
+            uint64_t wp0 = time_product(time_ac[num4 + wj], win_hann[wj]) +
+                           time_product(prev_frame_data[wj], win_hann[repeating - 1 - wj]);
+            vec_data[wj] = time_q31(wp0);
+
+            uint64_t wp1 =
+                time_product(time_ac[num4 + wj + 1], win_hann[wj + 1]) +
+                time_product(prev_frame_data[wj + 1], win_hann[repeating - 1 - (wj + 1)]);
+            vec_data[wj + 1] = time_q31(wp1);
+        }
+        for (; wj < repeating; ++wj) {
+            uint64_t window_product =
+                time_product(time_ac[num4 + wj], win_hann[wj]) +
+                time_product(prev_frame_data[wj], win_hann[repeating - 1 - wj]);
+            vec_data[wj] = time_q31(window_product);
         }
     }
-    for (int i = repeating; i < num1; ++i)
-        vec_data[i] = time_ac[num4 + i];
-    for (int i = 0; i < repeating; ++i)
-        prev_frame_data[i] = time_ac[num4 + num1 + i];
+    if (num1 > repeating)
+        memcpy(vec_data + repeating, time_ac + num4 + repeating,
+               (size_t)(num1 - repeating) * sizeof(int));
+    if (repeating > 0)
+        memcpy(prev_frame_data, time_ac + num4 + num1, (size_t)repeating * sizeof(int));
 }
 #include "../include/lhdc_fft.h"
 #include <audio_math/constants.h>
@@ -89,8 +187,9 @@ void lhdc_dec_lossy_time_operation(void *heap_memory, int *vec_data, int all_tim
 #include <limits.h>
 #include <math.h>
 
-/* Convert bounded trig coefficients to saturated Q31, preserving power-of-two scaling and truncation toward zero.
- * Win32 kernel builds use common saturation directly, avoiding CRT helpers from intermediate int64 conversion. */
+/* Convert a bounded trigonometric coefficient to saturated Q31 while preserving power-of-two
+ * scaling and truncation toward zero. Win32 kernel builds use the common saturated conversion
+ * directly, avoiding an intermediate int64 conversion and CRT helper. */
 static int q31(float value) {
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
     return audio_math_truncate_sat_i32_f32(value * AUDIO_MATH_POW2_31_F32);
@@ -104,9 +203,10 @@ static int q31(float value) {
 #endif
 }
 
-/* Bind caller buffers, copy fixed Q31 coefficients, and initialize the internal integer FFT.
- * Other sizes retain stepwise float phase; Windows kernel builds generate twiddles with bounded software trig.
- * Window generation retains inner double sine/multiplication and round to float only after the outer sine.
+/* Bind caller buffers, copy Q31 coefficients for fixed configurations, and initialize the internal
+ * integer FFT. Other sizes retain incremental float phase; Windows kernel builds generate rotations
+ * with bounded software trigonometry. Window generation keeps inner sine/product operations in
+ * double and converts to float only after the outer sine.
  */
 int lhdc_dec_lossy_time_table_start(void *heap_memory, int frequency_size, int repeating,
                                     int sft_num, time_buffer_struct *time_buf,
@@ -172,10 +272,10 @@ int lhdc_dec_lossy_time_table_start(void *heap_memory, int frequency_size, int r
     lhdc_v5_fft_alloc(num2, 0, time_process->kiss_fft_cfg, &fft_window_size, p_fft_twiddle);
     time_process->offset_num = (unsigned)sft_num;
     unsigned n = ((unsigned)sft_num - 1) & 255;
-    time_process->offset_num_value_half = audio_math_int32_from_bits(audio_math_shift_left_low8_zero32(1u, n));
+    time_process->offset_num_value_half =
+        audio_math_int32_from_bits(audio_math_shift_left_low8_zero32(1u, n));
     return LHDC_DEC_OK;
 }
 #include <audio_math/bits.h>
 #include "../include/lhdc_dec_control.h"
 #include <string.h>
-

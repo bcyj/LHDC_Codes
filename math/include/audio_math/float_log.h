@@ -35,7 +35,7 @@ static inline double audio_math_log_f32_wide_soft(float input) {
     }
     double reduced = (mantissa - 1.0) / (mantissa + 1.0);
     double square = reduced * reduced;
-    /* ln(m) = 2*z*(1 + z^2/3 + ... + z^34/35)。
+    /* ln(m) = 2*z*(1 + z^2/3 + ... + z^34/35).
      * |z| < 0.172 and omitted terms total less than 3e-30. Coefficients are nearest-even binary64
      * odd reciprocals expressed as exact-value literals to avoid runtime division under strict FP.
      * Preserve explicit Horner order without coefficient arrays or scratch. */

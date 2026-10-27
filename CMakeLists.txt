@@ -9,6 +9,10 @@ option(LHDC_ENCODER_WITH_AR "Enable AR processing in encoder instances" ${LHDC_B
 option(LHDC_BUILD_BUNDLE "Build encoder and PCM effects shared library" ON)
 option(LHDC_BUILD_TESTS "Build component linkage and PCM smoke test" OFF)
 option(LHDC_V5_ENCODER_FIXED_FFT "Use integer FFT inside the V5 encoder MDCT" OFF)
+option(LHDC_ENCODER_HIGH_PERFORMANCE_SSE
+  "Enable faster non-bitexact SSE approximations in the encoder" OFF)
+option(LHDC_AR_HIGH_PERFORMANCE_SSE
+  "Enable faster non-bitexact SSE processing in the AR PCM effects component" OFF)
 set(LHDC_V4_SHIFT_COUNT_BITS "AUTO" CACHE STRING "V4 shift count model: AUTO, 5 (modulo32), or 8 (wide shifts zero/sign)")
 set_property(CACHE LHDC_V4_SHIFT_COUNT_BITS PROPERTY STRINGS AUTO 5 8)
 if(NOT LHDC_V4_SHIFT_COUNT_BITS MATCHES "^(AUTO|5|8)$")
@@ -25,6 +29,9 @@ set(LHDC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lhdc")
 include(cmake/Components.cmake)
 if(LHDC_BUILD_TESTS)
   set(AUDIO_MATH_BUILD_TESTS ON)
+endif()
+if(LHDC_AR_HIGH_PERFORMANCE_SSE)
+  set(AUDIO_MATH_FFT_SPLIT_RADIX_SSE ON)
 endif()
 add_subdirectory(math)
 add_subdirectory(lhdc/common common)
@@ -101,6 +108,8 @@ if(LHDC_BUILD_TESTS)
   lhdc_compile_settings(lhdc_fft_float32_reference_objects)
   target_compile_definitions(lhdc_fft_float32_reference_objects PRIVATE
     AUDIO_MATH_FFT_ITERATIVE_STATIC=0
+    AUDIO_MATH_FFT_512_BITEXACT_SSE2=0
+    AUDIO_MATH_FFT_BITEXACT_SSE2=0
     LHDC_KISS_FFT_ITERATIVE_STATIC=0
     audio_math_fft_work=lhdc_reference_fft_work
     audio_math_fft_factor=lhdc_reference_fft_factor

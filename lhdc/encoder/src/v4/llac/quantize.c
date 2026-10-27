@@ -16,6 +16,18 @@
 #include <math.h>
 #include "gain.h"
 
+#if defined(__SSE2__) ||                                                                          \
+    (defined(_MSC_VER) && (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86))))
+#include <emmintrin.h>
+#define LHDC_LLAC_QUANT_USE_SSE2 1
+#else
+#define LHDC_LLAC_QUANT_USE_SSE2 0
+#endif
+
+#ifndef LLAC_QUANT_FAST_RECIPROCAL
+#define LLAC_QUANT_FAST_RECIPROCAL 0
+#endif
+
 /* Estimate quantization gain from spectral energy/target bits and update cross-frame compensation;
  * HR may add high-frequency regularization; after eight search steps, clamp minimum gain and linearize. */
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
@@ -52,15 +64,45 @@ void v4f_llac_estimate_quantization_gain_with_workspace(
     *targetBitsOff = target_offset;
     *old_targetBits = nbitsSQ;
     LLAC_FLOAT x_max = 0.0f;
-    for (LLAC_INT i = 0; i < lg; ++i)
-        if (audio_math_abs_f32(x[i]) > x_max)
-            x_max = audio_math_abs_f32(x[i]);
+#if LHDC_LLAC_QUANT_USE_SSE2
+    if (lg >= 4) {
+        __m128 max_v = _mm_setzero_ps();
+        __m128 abs_mask = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff));
+        LLAC_INT lg4 = lg & ~3;
+        for (LLAC_INT i = 0; i < lg4; i += 4) {
+            __m128 v = _mm_loadu_ps(&x[i]);
+            v = _mm_and_ps(v, abs_mask);
+            max_v = _mm_max_ps(max_v, v);
+        }
+        max_v = _mm_max_ps(max_v, _mm_shuffle_ps(max_v, max_v, _MM_SHUFFLE(1, 0, 3, 2)));
+        max_v = _mm_max_ps(max_v, _mm_shuffle_ps(max_v, max_v, _MM_SHUFFLE(2, 3, 0, 1)));
+        _mm_store_ss(&x_max, max_v);
+        for (LLAC_INT i = lg4; i < lg; ++i) {
+            LLAC_FLOAT val = audio_math_abs_f32(x[i]);
+            if (val > x_max)
+                x_max = val;
+        }
+    } else {
+        for (LLAC_INT i = 0; i < lg; ++i) {
+            LLAC_FLOAT val = audio_math_abs_f32(x[i]);
+            if (val > x_max)
+                x_max = val;
+        }
+    }
+#else
+    for (LLAC_INT i = 0; i < lg; ++i) {
+        LLAC_FLOAT val = audio_math_abs_f32(x[i]);
+        if (val > x_max)
+            x_max = val;
+    }
+#endif
     LLAC_FLOAT reg_val = 0.0f;
     if (hrmode != 0 && regBits > 0) {
         LLAC_FLOAT M0 = LHDC_V4_LLAC_QUANT_ENERGY_FLOOR, M1 = LHDC_V4_LLAC_QUANT_ENERGY_FLOOR;
         for (LLAC_INT i = 0; i < lg; ++i) {
-            M0 += audio_math_abs_f32(x[i]);
-            M1 = (LLAC_FLOAT)i * audio_math_abs_f32(x[i]) + M1;
+            LLAC_FLOAT ax = audio_math_abs_f32(x[i]);
+            M0 += ax;
+            M1 = (LLAC_FLOAT)i * ax + M1;
         }
         LLAC_FLOAT thresh = frame_ms + frame_ms;
         LLAC_FLOAT rB_offset = M1 / M0;
@@ -81,19 +123,21 @@ void v4f_llac_estimate_quantization_gain_with_workspace(
 #else
         ind_min = (LLAC_FLOAT)audio_math_ceil_f64((double)audio_math_log10f(x_max / limit) * 28.0);
 #endif
-        for (LLAC_INT i = 0; i < lg; i += 4) {
-            LLAC_FLOAT ener = reg_val + x[i] * x[i];
-            ener += x[i + 1] * x[i + 1];
-            ener += x[i + 2] * x[i + 2];
-            ener += x[i + 3] * x[i + 3];
+        const LLAC_FLOAT *xp = x;
+        const LLAC_INT n_en = lg >> 2;
+        for (LLAC_INT k = 0; k < n_en; ++k, xp += 4) {
+            LLAC_FLOAT x0 = xp[0], x1 = xp[1], x2 = xp[2], x3 = xp[3];
+            LLAC_FLOAT ener = reg_val + x0 * x0;
+            ener += x1 * x1;
+            ener += x2 * x2;
+            ener += x3 * x3;
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
-            LLAC_FLOAT tmp = lhdc_windows_log10f_soft(
-                (LLAC_FLOAT)((double)ener + AUDIO_MATH_POW2_NEG_31_F64), math_policy);
-#else
             LLAC_FLOAT tmp =
-                audio_math_log10f((LLAC_FLOAT)((double)ener + AUDIO_MATH_POW2_NEG_31_F64));
+                lhdc_windows_log10f_soft(ener + AUDIO_MATH_POW2_NEG_31_F32, math_policy);
+#else
+            LLAC_FLOAT tmp = audio_math_log10f(ener + AUDIO_MATH_POW2_NEG_31_F32);
 #endif
-            en[i / 4] = (LLAC_FLOAT)(((double)tmp * 10.0 + 7.0) * 1.4);
+            en[k] = (LLAC_FLOAT)(((double)tmp * 10.0 + 7.0) * 1.4);
         }
 
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
@@ -287,7 +331,42 @@ void v4f_llac_quantize_spectrum(LLAC_FLOAT *x, LLAC_FLOAT gain, LLAC_INT *xq, LL
                                 LLAC_INT *lsbMode, LLAC_INT mode, LLAC_INT target,
                                 LLAC_INT hrmode) {
     LLAC_FLOAT offset = hrmode ? 0.5f : 0.375f;
-    for (LLAC_INT i = 0; i < nt; ++i) {
+    LLAC_INT i = 0;
+#if LHDC_LLAC_QUANT_USE_SSE2
+    __m128 zero = _mm_setzero_ps();
+    __m128 offset_pos = _mm_set1_ps(offset);
+    __m128 offset_neg = _mm_set1_ps(-offset);
+#if LLAC_QUANT_FAST_RECIPROCAL
+    __m128 inv_gain_vec = _mm_set1_ps(1.0f / gain);
+#else
+    __m128 gain_vec = _mm_set1_ps(gain);
+#endif
+    for (; i <= nt - 4; i += 4) {
+        __m128 x_vec = _mm_loadu_ps(&x[i]);
+        __m128 gt = _mm_cmpgt_ps(x_vec, zero);
+        __m128 lt = _mm_cmplt_ps(x_vec, zero);
+        __m128 sign_val = _mm_or_ps(_mm_and_ps(gt, offset_pos), _mm_and_ps(lt, offset_neg));
+#if LLAC_QUANT_FAST_RECIPROCAL
+        __m128 scaled = _mm_mul_ps(x_vec, inv_gain_vec);
+#else
+        __m128 scaled = _mm_div_ps(x_vec, gain_vec);
+#endif
+        __m128 val = _mm_add_ps(scaled, sign_val);
+        __m128i int_val = _mm_cvttps_epi32(val);
+        if (!hrmode) {
+            __m128i max_val = _mm_set1_epi32(32767);
+            __m128i min_val = _mm_set1_epi32(-32768);
+            __m128i gt_max = _mm_cmpgt_epi32(int_val, max_val);
+            int_val =
+                _mm_or_si128(_mm_and_si128(gt_max, max_val), _mm_andnot_si128(gt_max, int_val));
+            __m128i lt_min = _mm_cmpgt_epi32(min_val, int_val);
+            int_val =
+                _mm_or_si128(_mm_and_si128(lt_min, min_val), _mm_andnot_si128(lt_min, int_val));
+        }
+        _mm_storeu_si128((__m128i *)&xq[i], int_val);
+    }
+#endif
+    for (; i < nt; ++i) {
         LLAC_FLOAT sign = x[i] > 0.0f ? 1.0f : x[i] < 0.0f ? -1.0f : 0.0f;
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
         /* Evaluate division and bias addition in extended precision, then convert directly to integer without intermediate float stores. */
@@ -369,20 +448,9 @@ void v4f_llac_quantize_spectrum(LLAC_FLOAT *x, LLAC_FLOAT gain, LLAC_INT *xq, LL
         c = (c & 15) * 16 + (lev1 < 2 ? (lev1 + 1) * (a + b) + 1 : lev1 + 12);
         ++pair_codes;
     }
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
-    *nbits = audio_math_truncate_i32_f64(
-        audio_math_ceil_f64((double)(LLAC_FLOAT)*nbits * AUDIO_MATH_POW2_NEG_11_F64));
-#else
-    *nbits = (LLAC_INT)audio_math_ceil_f64((double)(LLAC_FLOAT)*nbits * AUDIO_MATH_POW2_NEG_11_F64);
-#endif
+    *nbits = (*nbits + 2047) >> 11;
     if (mode >= 0) {
-#if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
-        *nbits2 = audio_math_truncate_i32_f64(
-            audio_math_ceil_f64((double)(LLAC_FLOAT)*nbits2 * AUDIO_MATH_POW2_NEG_11_F64));
-#else
-        *nbits2 =
-            (LLAC_INT)audio_math_ceil_f64((double)(LLAC_FLOAT)*nbits2 * AUDIO_MATH_POW2_NEG_11_F64);
-#endif
+        *nbits2 = (*nbits2 + 2047) >> 11;
         if (mode != 0) {
             *nbits += nbits_lsb;
             *nbits2 += nbits_lsb;

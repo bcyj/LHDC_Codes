@@ -1,7 +1,8 @@
 #ifndef LHDC_X86_ATTACK_H
 #define LHDC_X86_ATTACK_H
 
-#if defined(_MSC_VER) && (defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
+#if defined(_MSC_VER) &&                                                                          \
+    (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86_FP) && _M_IX86_FP >= 2))
 #define LHDC_X86_ATTACK_HIGHPASS_BLOCK 1
 
 /* Compute 40 high-pass samples from small snapshots; input needs 42 samples, output 40.

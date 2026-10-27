@@ -11,6 +11,15 @@
 #include "dct4_float32_tables.h"
 #include <math.h>
 #include <string.h>
+
+#if defined(__SSE2__) ||                                                                          \
+    (defined(_MSC_VER) && (defined(_M_X64) || (!defined(_KERNEL_MODE) && defined(_M_IX86))))
+#include <emmintrin.h>
+#define LHDC_DCT4_USE_SSE2 1
+#else
+#define LHDC_DCT4_USE_SSE2 0
+#endif
+
 /* Fixed LLAC lengths share verified DCT rotation tables; other lengths use generic initialization. */
 
 /* Validate even length and capacity limits; return rotation-coefficient float count, or zero for invalid lengths. */
@@ -34,7 +43,8 @@ int lhdc_dct4_f32_init(LhdcDct4F32Plan *plan, int32_t length, kiss_fft_cpx *rota
     plan->pre_rotation = rotation_storage;
     plan->post_rotation = rotation_storage + length / 2;
     plan->fft_twiddles = rotation_storage + length;
-    lhdc_kiss_fft_factor(fft_length, (int32_t)audio_math_sqrt_floor_u32((uint32_t)fft_length), plan->factors);
+    lhdc_kiss_fft_factor(fft_length, (int32_t)audio_math_sqrt_floor_u32((uint32_t)fft_length),
+                         plan->factors);
     plan->maximum_radix = 1;
     for (unsigned i = 0; i < 64; i += 2) {
         if (plan->factors[i] > plan->maximum_radix)
@@ -55,9 +65,10 @@ int lhdc_dct4_f32_init(LhdcDct4F32Plan *plan, int32_t length, kiss_fft_cpx *rota
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) &&                           \
     (defined(_M_IX86) || defined(_M_X64))
             /* Both phases are first rounded to float and have magnitude below 2; the software backend produces bit-identical coefficients. */
-            audio_math_sincos_bounded_f32_soft(pre_phase, &rotation_storage[k].i, &rotation_storage[k].r);
+            audio_math_sincos_bounded_f32_soft(pre_phase, &rotation_storage[k].i,
+                                               &rotation_storage[k].r);
             audio_math_sincos_bounded_f32_soft(post_phase, &rotation_storage[fft_length + k].i,
-                                         &rotation_storage[fft_length + k].r);
+                                               &rotation_storage[fft_length + k].r);
 #else
             rotation_storage[k].r = (float)audio_math_host_cos((double)pre_phase);
             rotation_storage[k].i = (float)audio_math_host_sin((double)pre_phase);
@@ -129,12 +140,33 @@ int lhdc_dct4_f32_execute(const LhdcDct4F32Kernel *kernel, const float *input, f
         work->radix_scratch_floats < radix_floats)
         return LHDC_DCT4_BUFFER_TOO_SMALL;
     /* 1. Pack even samples forward and odd samples backward, then apply pre-rotation. */
-    for (int32_t k = 0; k < fft_length; ++k) {
+    const kiss_fft_cpx *pre = kernel->pre_rotation;
+    int32_t k = 0;
+#if LHDC_DCT4_USE_SSE2
+    const __m128 sign_mask_odd = _mm_setr_ps(0.0f, -0.0f, 0.0f, -0.0f);
+    for (; k + 2 <= fft_length; k += 2) {
+        float even0 = input[2 * k];
+        float rev0 = input[length - 1 - 2 * k];
+        float even1 = input[2 * k + 2];
+        float rev1 = input[length - 3 - 2 * k];
+        __m128 X = _mm_setr_ps(even0, rev0, even1, rev1);
+        __m128 W = _mm_loadu_ps((const float *)&pre[k]);
+
+        __m128 X_rr = _mm_shuffle_ps(X, X, _MM_SHUFFLE(2, 2, 0, 0));
+        __m128 X_ii = _mm_shuffle_ps(X, X, _MM_SHUFFLE(3, 3, 1, 1));
+        __m128 W_ir = _mm_shuffle_ps(W, W, _MM_SHUFFLE(2, 3, 0, 1));
+
+        __m128 P1 = _mm_mul_ps(X_rr, W);
+        __m128 P2 = _mm_mul_ps(X_ii, W_ir);
+
+        __m128 P2_signed = _mm_xor_ps(P2, sign_mask_odd);
+        __m128 packed = _mm_sub_ps(P1, P2_signed);
+        _mm_storeu_ps((float *)&work->packed_input[k], packed);
+    }
+#endif
+    for (; k < fft_length; ++k) {
         float even = input[2 * k], reversed_odd = input[length - 1 - 2 * k];
-        kiss_fft_cpx rotation;
-        memcpy(&rotation, (const unsigned char *)kernel->pre_rotation + (size_t)k * sizeof rotation,
-               sizeof rotation);
-        float real = rotation.r, imag = rotation.i;
+        float real = pre[k].r, imag = pre[k].i;
         work->packed_input[k].r = even * real - reversed_odd * imag;
         work->packed_input[k].i = reversed_odd * real + even * imag;
     }
@@ -143,14 +175,40 @@ int lhdc_dct4_f32_execute(const LhdcDct4F32Kernel *kernel, const float *input, f
                            work->radix_scratch};
     lhdc_kiss_fft_work(work->spectrum, work->packed_input, 1, 1, kernel->factors, &fft);
     /* 3. V5's post-table includes scaling; apply post-rotation and omit extra normalization multiplication. */
+    const kiss_fft_cpx *post = kernel->post_rotation;
     if (kernel->scaling == LHDC_DCT4_SCALE_IN_ROTATION_TABLE) {
-        for (int32_t k = 0; k < fft_length; ++k) {
+        k = 0;
+#if LHDC_DCT4_USE_SSE2
+        const __m128 sign_mask = _mm_set1_ps(-0.0f);
+        for (; k + 2 <= fft_length; k += 2) {
+            __m128 S = _mm_loadu_ps((const float *)&work->spectrum[k]);
+            __m128 W = _mm_loadu_ps((const float *)&post[k]);
+
+            __m128 S_rr = _mm_shuffle_ps(S, S, _MM_SHUFFLE(2, 2, 0, 0));
+            __m128 S_ii = _mm_shuffle_ps(S, S, _MM_SHUFFLE(3, 3, 1, 1));
+            __m128 W_ir = _mm_shuffle_ps(W, W, _MM_SHUFFLE(2, 3, 0, 1));
+
+            __m128 P1 = _mm_mul_ps(S_rr, W);
+            __m128 P2 = _mm_mul_ps(S_ii, W_ir);
+
+            __m128 P_sub = _mm_sub_ps(P1, P2);
+            __m128 P_add = _mm_add_ps(P1, P2);
+            __m128 P_add_neg = _mm_xor_ps(P_add, sign_mask);
+
+            float sub_buf[4];
+            float add_buf[4];
+            _mm_storeu_ps(sub_buf, P_sub);
+            _mm_storeu_ps(add_buf, P_add_neg);
+
+            output[2 * k] = sub_buf[0];
+            output[length - 1 - 2 * k] = add_buf[1];
+            output[2 * k + 2] = sub_buf[2];
+            output[length - 3 - 2 * k] = add_buf[3];
+        }
+#endif
+        for (; k < fft_length; ++k) {
             float real = work->spectrum[k].r, imag = work->spectrum[k].i;
-            kiss_fft_cpx rotation;
-            memcpy(&rotation,
-                   (const unsigned char *)kernel->post_rotation + (size_t)k * sizeof rotation,
-                   sizeof rotation);
-            float rotate_real = rotation.r, rotate_imag = rotation.i;
+            float rotate_real = post[k].r, rotate_imag = post[k].i;
             output[2 * k] = real * rotate_real - imag * rotate_imag;
             output[length - 1 - 2 * k] = -(real * rotate_imag + imag * rotate_real);
         }
@@ -158,13 +216,39 @@ int lhdc_dct4_f32_execute(const LhdcDct4F32Kernel *kernel, const float *input, f
     }
     /* 4. V4 and generic orthonormal paths post-rotate first, then normalize separately without folding scaling into tables. */
     const float normalization = kernel->normalization;
-    for (int32_t k = 0; k < fft_length; ++k) {
+    k = 0;
+#if LHDC_DCT4_USE_SSE2
+    const __m128 norm_vec = _mm_set1_ps(normalization);
+    const __m128 sign_mask = _mm_set1_ps(-0.0f);
+    for (; k + 2 <= fft_length; k += 2) {
+        __m128 S = _mm_loadu_ps((const float *)&work->spectrum[k]);
+        __m128 W = _mm_loadu_ps((const float *)&post[k]);
+
+        __m128 S_rr = _mm_shuffle_ps(S, S, _MM_SHUFFLE(2, 2, 0, 0));
+        __m128 S_ii = _mm_shuffle_ps(S, S, _MM_SHUFFLE(3, 3, 1, 1));
+        __m128 W_ir = _mm_shuffle_ps(W, W, _MM_SHUFFLE(2, 3, 0, 1));
+
+        __m128 P1 = _mm_mul_ps(S_rr, W);
+        __m128 P2 = _mm_mul_ps(S_ii, W_ir);
+
+        __m128 P_sub = _mm_mul_ps(_mm_sub_ps(P1, P2), norm_vec);
+        __m128 P_add = _mm_add_ps(P1, P2);
+        __m128 P_add_neg = _mm_mul_ps(_mm_xor_ps(P_add, sign_mask), norm_vec);
+
+        float sub_buf[4];
+        float add_buf[4];
+        _mm_storeu_ps(sub_buf, P_sub);
+        _mm_storeu_ps(add_buf, P_add_neg);
+
+        output[2 * k] = sub_buf[0];
+        output[length - 1 - 2 * k] = add_buf[1];
+        output[2 * k + 2] = sub_buf[2];
+        output[length - 3 - 2 * k] = add_buf[3];
+    }
+#endif
+    for (; k < fft_length; ++k) {
         float real = work->spectrum[k].r, imag = work->spectrum[k].i;
-        kiss_fft_cpx rotation;
-        memcpy(&rotation,
-               (const unsigned char *)kernel->post_rotation + (size_t)k * sizeof rotation,
-               sizeof rotation);
-        float rotate_real = rotation.r, rotate_imag = rotation.i;
+        float rotate_real = post[k].r, rotate_imag = post[k].i;
         output[2 * k] = normalization * (real * rotate_real - imag * rotate_imag);
         output[length - 1 - 2 * k] = normalization * -(imag * rotate_real + real * rotate_imag);
     }
