@@ -9,7 +9,7 @@
 #include "../include/llac_signal.h"
 #include "../include/llac_fft.h"
 #include "../include/llac_dct_workspace.h"
-#include "../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
 #include <audio_math/float_convert.h>
 #endif

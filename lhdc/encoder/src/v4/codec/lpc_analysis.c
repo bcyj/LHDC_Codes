@@ -2,7 +2,7 @@
 #include "../../../../common/include/lhdc_log.h"
 #include <audio_math/math.h>
 #include <audio_math/constants.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #include <audio_math/float_scaling.h>
 #include <audio_math/float_convert.h>
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && !defined(__clang__) &&                           \

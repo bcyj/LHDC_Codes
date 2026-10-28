@@ -1,7 +1,7 @@
 #include "../../../../common/include/compat/v5/lhdc_v5_constants.h"
 #include "../include/codec/bit_operations.h"
 #include "../include/codec/fast_math.h"
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

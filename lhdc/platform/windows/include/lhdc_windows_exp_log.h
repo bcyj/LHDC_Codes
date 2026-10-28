@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2025, Arm Limited. SPDX-License-Identifier: MIT
  * Windows adaptation: evaluate exp2f/log2f in the specified fused multiply-add order.
- * See math/platform/windows/NOTICE.math.txt for the complete license.
+ * See audio_codec_common/math/platform/windows/NOTICE.math.txt for the complete license.
  */
 #ifndef LHDC_WINDOWS_CODEC_MATH_H
 #define LHDC_WINDOWS_CODEC_MATH_H

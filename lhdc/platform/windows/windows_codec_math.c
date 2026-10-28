@@ -3,7 +3,7 @@
 #include <audio_math/float_convert.h>
 /* Shared Windows floating-point compatibility functions.
  * Copyright (c) 2017-2025, Arm Limited. SPDX-License-Identifier: MIT
- * See math/platform/windows/NOTICE.math.txt for provenance and the complete license. */
+ * See audio_codec_common/math/platform/windows/NOTICE.math.txt for provenance and the complete license. */
 #include <audio_math/fma_native.h>
 #include "include/lhdc_windows_float_math_constants.h"
 #include <audio_math/constants.h>

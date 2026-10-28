@@ -2,7 +2,7 @@
 #define LHDC_ENCODER_SRC_V5_INCLUDE_CODEC_BIT_WRITER_H
 #include "../types/lhdc_bit_writer_types.h"
 #include "../../../../../common/include/compat/v5/lhdc_v5_constants.h"
-#include "../../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 /* Check remaining capacity with full pointers, requiring four bytes for a whole-word write. */
 static inline int32_t v5i_bit_writer_word_fits(const v5_bit_writer *writer) {
     uintptr_t cursor = (uintptr_t)writer->buf, end = (uintptr_t)writer->end;

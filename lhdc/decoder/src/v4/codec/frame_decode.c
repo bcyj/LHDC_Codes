@@ -1,7 +1,7 @@
 #include "../../../include/lhdc/decoder/status.h"
 #include "../include/lhdc_dec_core.h"
-#include "../../../../../math/include/audio_math/byte_order.h"
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/byte_order.h>
+#include <audio_math/integer.h>
 #include "../include/lhdc_upsample.h"
 #include <stdbool.h>
 #include <stdint.h>

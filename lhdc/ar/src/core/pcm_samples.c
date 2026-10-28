@@ -1,7 +1,7 @@
 #include <audio_math/float_properties.h>
 #include "lhdc_log.h"
-#include "../../../../math/include/audio_math/byte_order.h"
-#include "../../../../math/include/audio_math/integer.h"
+#include <audio_math/byte_order.h>
+#include <audio_math/integer.h>
 #include "include/ar_internal.h"
 #include <string.h>
 #include <math.h>

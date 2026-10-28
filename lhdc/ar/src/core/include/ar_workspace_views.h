@@ -3,7 +3,7 @@
 #ifndef LHDC_AR_SRC_CORE_INCLUDE_AR_WORKSPACE_VIEWS_H
 #define LHDC_AR_SRC_CORE_INCLUDE_AR_WORKSPACE_VIEWS_H
 #include "../../../include/ar/types.h"
-#include "../../../../../math/include/audio_math/fft_float32.h"
+#include <audio_math/fft_float32.h>
 #include <stddef.h>
 
 /* Read-only IIR coefficients and order; the caller separately owns history and input/output buffers. */

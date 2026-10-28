@@ -34,7 +34,7 @@ static FARPROC WINAPI test_get_proc(HMODULE module, LPCSTR name) {
 #define GetModuleHandleW test_get_module
 #define LoadLibraryExW test_load_library
 #define GetProcAddress test_get_proc
-#include "../../../math/platform/windows/crt_math.c"
+#include "../../../../audio_codec_common/math/platform/windows/crt_math.c"
 
 /* Verify math-runtime load failures, missing symbols, and successful retry results. */
 int main(void) {

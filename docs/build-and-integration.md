@@ -2,7 +2,7 @@
 
 English | [Simplified Chinese](zh-CN/build-and-integration.md) | [Home](../README.md)
 
-Run these commands from the release root. Output goes to `build/` without developer-specific drive letters or external baseline directories. Minimum versions are CMake 3.19 and Python 3.9 for the Python tools.
+Run these commands from the `lhdc_codes` release root. Keep the sibling `audio_codec_common` repository at `../audio_codec_common`, or set `AUDIO_COMMON_ROOT` to its absolute path. Output goes to `build/` without developer-specific drive letters or external baseline directories. Minimum versions are CMake 3.19 and Python 3.9 for the Python tools.
 
 ## Windows CMake
 
@@ -70,11 +70,15 @@ cmake --build build/ar --config Release
 ### Parent CMake projects
 
 ```cmake
-add_subdirectory(path/to/lhdc_codes_release lhdc_build)
+add_subdirectory(path/to/audio_codec_common audio_common_build)
+add_subdirectory(path/to/lhdc_codes lhdc_build)
 target_link_libraries(my_app PRIVATE lhdc::encoder lhdc::decoder audio_ar::ar)
 ```
 
-Remove unused targets. Targets propagate include paths/dependencies. The root `lhdc_all` shared library contains encoders and AR only; decoders use static `lhdc::decoder`. Do not infer component contents from a shared-library name.
+If the common repository is not adjacent to `lhdc_codes`, configure the latter with
+`-DAUDIO_COMMON_ROOT=<path-to-audio_codec_common>`. Remove unused targets. Targets propagate include
+paths/dependencies. The root `lhdc_all` shared library contains encoders and AR only; decoders use
+static `lhdc::decoder`. Do not infer component contents from a shared-library name.
 
 ## Native MSBuild
 
@@ -87,12 +91,13 @@ msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:P
 msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:Platform=Win32
 ```
 
-VS2022 v143 users may add `/p:PlatformToolset=v143`. Output defaults to `build/windows/`; override with `LhdcOutputRoot`, `DecoderEvidenceRoot`, and `AudioMathOutputRoot`.
+VS2022 v143 users may add `/p:PlatformToolset=v143`. Output defaults to `build/windows/`; override with `LhdcOutputRoot`, `DecoderEvidenceRoot`, `AudioMathOutputRoot`, and `AudioCommonOutputRoot`.
 
 Optional properties include `LhdcV5EncoderFixedFft=1`, `LhdcKissFftIterativeStatic=1`, and
 `LhdcDriverResources=1`. The high-performance switches are currently CMake options; their default
-exact optimizations require no MSBuild property. Direct static linking must include common
-math/component dependencies; prefer public CMake targets for dependency management.
+exact optimizations require no MSBuild property. Direct static linking must include
+`audio_common::math`, `audio_common::core`, and the selected component dependencies; prefer public
+CMake targets for dependency management.
 
 ## Android NDK
 
@@ -131,7 +136,11 @@ Direct ndk-build creates six versioned SOs by default; set `LHDC_ANDROID_BUILD_B
 ## Standalone shared modules
 
 ```powershell
-cmake -S math -B build/math -A x64 -DAUDIO_MATH_BUILD_TESTS=ON
+cmake -S ../audio_codec_common -B build/audio-common -A x64 -DAUDIO_COMMON_BUILD_TESTS=ON
+cmake --build build/audio-common --config Release
+cmake -E chdir build/audio-common ctest -C Release --output-on-failure
+
+cmake -S ../audio_codec_common/math -B build/math -A x64 -DAUDIO_MATH_BUILD_TESTS=ON
 cmake --build build/math --config Release
 cmake -E chdir build/math ctest -C Release --output-on-failure
 
@@ -150,4 +159,4 @@ Win32 allocator callbacks remain `cdecl`; do not change all codec interfaces thr
 
 ## Release validation
 
-This source distribution contains no precompiled binaries; build for the selected platform/options. English comment translation preserves every non-comment C/H token. Historical runtime/quality results are not counted as fresh translation-test runs. Build caches and validation logs under ignored `build/` are not release payload.
+This source distribution contains no precompiled binaries; build for the selected platform/options. New and updated release-source comments are English; Chinese documentation remains under `docs/zh-CN/`. Historical runtime/quality results are not counted as fresh release-test runs. Build caches and validation logs under ignored `build/` are not release payload.

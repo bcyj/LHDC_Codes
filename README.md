@@ -2,7 +2,7 @@
 
 English | [Simplified Chinese](README.zh-CN.md)
 
-This library contains V4/V5 encoders, V4/V5 decoders, an AR PCM effects processor, and a standalone shared mathematics module. It supports Windows Win32/x64 and Android ARM32/ARM64. The three audio components can be built individually or combined.
+This library contains V4/V5 encoders, V4/V5 decoders, and an AR PCM effects processor. It uses the sibling `audio_codec_common` repository for shared mathematics and allocation-free ring-buffer primitives. It supports Windows Win32/x64 and Android ARM32/ARM64. The three audio components can be built individually or combined.
 
 I developed this library for my other open-source A2DP driver project, drawing extensively on AOSP Bluetooth codec implementations and WillyBilly06's LHDCv5 library. It has been tested with multiple headphones. LHDC v1 is currently unsupported because I could not find a compatible headset; support may be added later. Gemini and ChatGPT were used extensively to generate code. All documentation and comments were generated and translated with Gemini and ChatGPT; I plan to proofread them manually when time permits.
 
@@ -16,21 +16,22 @@ I developed this library for my other open-source A2DP driver project, drawing e
 - [Translation and validation](docs/source-language.md): translation scope and release verification.
 
 ```text
-lhdc_codes_release/
-├─ CMakeLists.txt             Component selection and tests
-├─ lhdc_windows.sln           Windows encoder and AR MSBuild entry
-├─ lhdc/
-│  ├─ encoder/                V4/V5 encoders and cross-platform BT wrappers
-│  ├─ decoder/                V4/V5 decoders
-│  ├─ ar/                     LHDC AR algorithms and configuration
-│  ├─ common/                 Memory, buffers, transforms, and codec-specific numerics
-│  └─ platform/               Android, Windows, ARM, and x86 adaptation
-├─ math/                      Standalone shared C mathematics
-├─ ar/                        Generic PCM effects backend interface
-├─ cmake/                     Build and resource options
-├─ tests/integration/         Self-contained component and instance tests
-├─ tools/                     Android build and source-list tools
-└─ docs/                      English documentation and zh-CN translations
+bt_codes/
+├─ audio_codec_common/        Shared mathematics and allocation-free core primitives
+└─ lhdc_codes/
+   ├─ CMakeLists.txt          Component selection and tests
+   ├─ lhdc_windows.sln        Windows encoder and AR MSBuild entry
+   ├─ lhdc/
+   │  ├─ encoder/             V4/V5 encoders and cross-platform BT wrappers
+   │  ├─ decoder/             V4/V5 decoders
+   │  ├─ ar/                  LHDC AR algorithms and configuration
+   │  ├─ common/              Codec-specific memory, transforms, and numerics
+   │  └─ platform/            Android, Windows, ARM, and x86 adaptation
+   ├─ ar/                     Generic PCM effects backend interface
+   ├─ cmake/                  Build and resource options
+   ├─ tests/integration/      Self-contained component and instance tests
+   ├─ tools/                  Android build and source-list tools
+   └─ docs/                   English documentation and zh-CN translations
 ```
 
 To build Windows x64, open a terminal in this directory:

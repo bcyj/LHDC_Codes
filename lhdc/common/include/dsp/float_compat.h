@@ -4,7 +4,7 @@
 #include <audio_math/compiler.h>
 #include <audio_math/constants.h>
 #include <audio_math/numeric_bits.h>
-#include "../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #include "fast_math_constants.h"
 #include <audio_math/fma_native.h>
 #include <limits.h>

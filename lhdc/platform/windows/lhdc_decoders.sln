@@ -6,7 +6,9 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "lhdc_decoder_v5", "decoder\
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "lhdc_decoder", "decoder\lhdc_decoder.vcxproj", "{7B627C43-DEC0-4000-A000-000000000045}"
 EndProject
-Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "audio_math", "..\..\..\math\platform\windows\audio_math.vcxproj", "{FDD2FD01-4069-49C2-A55D-100000000001}"
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "audio_math", "..\..\..\..\audio_codec_common\math\platform\windows\audio_math.vcxproj", "{FDD2FD01-4069-49C2-A55D-100000000001}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "audio_common_core", "..\..\..\..\audio_codec_common\core\platform\windows\audio_common_core.vcxproj", "{FDD2FD01-4069-49C2-A55D-100000000002}"
 EndProject
 Global
 GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,14 @@ GlobalSection(ProjectConfigurationPlatforms) = postSolution
 {FDD2FD01-4069-49C2-A55D-100000000001}.Debug|x64.Build.0 = Debug|x64
 {FDD2FD01-4069-49C2-A55D-100000000001}.Release|x64.ActiveCfg = Release|x64
 {FDD2FD01-4069-49C2-A55D-100000000001}.Release|x64.Build.0 = Release|x64
+{FDD2FD01-4069-49C2-A55D-100000000002}.Debug|Win32.ActiveCfg = Debug|Win32
+{FDD2FD01-4069-49C2-A55D-100000000002}.Debug|Win32.Build.0 = Debug|Win32
+{FDD2FD01-4069-49C2-A55D-100000000002}.Release|Win32.ActiveCfg = Release|Win32
+{FDD2FD01-4069-49C2-A55D-100000000002}.Release|Win32.Build.0 = Release|Win32
+{FDD2FD01-4069-49C2-A55D-100000000002}.Debug|x64.ActiveCfg = Debug|x64
+{FDD2FD01-4069-49C2-A55D-100000000002}.Debug|x64.Build.0 = Debug|x64
+{FDD2FD01-4069-49C2-A55D-100000000002}.Release|x64.ActiveCfg = Release|x64
+{FDD2FD01-4069-49C2-A55D-100000000002}.Release|x64.Build.0 = Release|x64
 {7B627C43-DEC0-4000-A000-000000000004}.Debug|Win32.ActiveCfg = Debug|Win32
 {7B627C43-DEC0-4000-A000-000000000004}.Debug|Win32.Build.0 = Debug|Win32
 {7B627C43-DEC0-4000-A000-000000000004}.Release|Win32.ActiveCfg = Release|Win32

@@ -1,7 +1,7 @@
 #ifndef LHDC_ENCODER_SRC_V4_CODEC_FRAME_ENCODE_H
 #define LHDC_ENCODER_SRC_V4_CODEC_FRAME_ENCODE_H
 #include <stdint.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 /* Return unsigned bit width, at least one; zero residual has width one. */
 static inline uint32_t v4i_block_encode_residual_width(uint32_t value) {
     uint32_t bits = 1;

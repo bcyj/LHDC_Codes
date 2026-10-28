@@ -1,5 +1,6 @@
 LHDC_ANDROID_DIR := $(call my-dir)
 LHDC_PROJECT_ROOT := $(abspath $(LHDC_ANDROID_DIR)/../../..)
+AUDIO_COMMON_ROOT ?= $(abspath $(LHDC_PROJECT_ROOT)/../audio_codec_common)
 LOCAL_PATH := $(LHDC_PROJECT_ROOT)
 include $(LHDC_ANDROID_DIR)/sources.mk
 
@@ -23,7 +24,8 @@ LHDC_ANDROID_CFLAGS := -std=c11 -O2 -ffp-contract=off -fno-fast-math \
   -DAUDIO_MATH_FFT_ITERATIVE_STATIC=$(LHDC_KISS_FFT_ITERATIVE_STATIC) \
   -DLHDC_V5_ENCODER_FIXED_FFT=$(LHDC_V5_ENCODER_FIXED_FFT) \
   -DLHDC_DRIVER_RESOURCES=$(LHDC_DRIVER_RESOURCES)
-LHDC_ANDROID_INCLUDES := $(addprefix $(LOCAL_PATH)/,math/include ar/include \
+LHDC_ANDROID_INCLUDES := $(AUDIO_COMMON_ROOT)/math/include $(AUDIO_COMMON_ROOT)/core/include \
+  $(addprefix $(LOCAL_PATH)/,ar/include \
   lhdc/common/include lhdc/platform/include lhdc/ar/include lhdc/ar/src/core/include \
   lhdc/encoder/include/lhdc/encoder lhdc/decoder/include)
 

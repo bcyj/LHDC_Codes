@@ -2,7 +2,7 @@
 
 [English](../build-and-integration.md) | 简体中文
 
-以下命令均在发布目录根执行。构建输出写入 `build/`，不依赖开发机的盘符或外部封存目录。最低 CMake 版本为 3.19；Python 工具使用 Python 3.9 或更新版本。
+以下命令均在 `lhdc_codes` 发布目录根执行。默认要求同级 `audio_codec_common` 仓库位于 `../audio_codec_common`；如果放在其他位置，请设置 `AUDIO_COMMON_ROOT` 绝对路径。构建输出写入 `build/`，不依赖开发机的盘符或外部封存目录。最低 CMake 版本为 3.19；Python 工具使用 Python 3.9 或更新版本。
 
 ## Windows CMake
 
@@ -69,11 +69,13 @@ cmake --build build/ar --config Release
 ### 接入上层 CMake 工程
 
 ```cmake
-add_subdirectory(path/to/lhdc_codes_release lhdc_build)
+add_subdirectory(path/to/audio_codec_common audio_common_build)
+add_subdirectory(path/to/lhdc_codes lhdc_build)
 target_link_libraries(my_app PRIVATE lhdc::encoder lhdc::decoder audio_ar::ar)
 ```
 
-按实际使用的组件删除不需要的链接目标。依赖库和头文件路径由目标传递。根构建的 `lhdc_all` 共享库只包含编码器及 AR，解码器使用 `lhdc::decoder` 静态目标；不要据共享库名称推断其包含全部组件。
+如果公共仓库不在 `lhdc_codes` 同级目录，请为后者传入
+`-DAUDIO_COMMON_ROOT=<audio_codec_common路径>`。按实际使用的组件删除不需要的链接目标。依赖库和头文件路径由目标传递。根构建的 `lhdc_all` 共享库只包含编码器及 AR，解码器使用 `lhdc::decoder` 静态目标；不要据共享库名称推断其包含全部组件。
 
 ## 原生 MSBuild
 
@@ -86,11 +88,12 @@ msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:P
 msbuild lhdc/platform/windows/lhdc_decoders.sln /m /p:Configuration=Release /p:Platform=Win32
 ```
 
-如使用 VS2022 的 v143 工具集，可附加 `/p:PlatformToolset=v143`。输出默认位于本目录的 `build/windows/`，可通过 `LhdcOutputRoot`、`DecoderEvidenceRoot` 和 `AudioMathOutputRoot` 属性改写。
+如使用 VS2022 的 v143 工具集，可附加 `/p:PlatformToolset=v143`。输出默认位于本目录的 `build/windows/`，可通过 `LhdcOutputRoot`、`DecoderEvidenceRoot`、`AudioMathOutputRoot` 和 `AudioCommonOutputRoot` 属性改写。
 
 MSBuild 可选属性：`LhdcV5EncoderFixedFft=1`、`LhdcKissFftIterativeStatic=1`、
 `LhdcDriverResources=1`。新增高性能开关目前通过 CMake 选择；默认的二进制一致优化不需要额外
-MSBuild 属性。直接链接静态库时须一并链接其公共数学和组件依赖；优先使用 CMake 的公开目标管理依赖。
+MSBuild 属性。直接链接静态库时须一并链接 `audio_common::math`、
+`audio_common::core` 及所选组件依赖；优先使用 CMake 的公开目标管理依赖。
 
 ## Android NDK
 
@@ -129,7 +132,11 @@ Linux/macOS 宿主使用 NDK 中的 `ndk-build`。输出库如下：
 ## 独立公共模块
 
 ```powershell
-cmake -S math -B build/math -A x64 -DAUDIO_MATH_BUILD_TESTS=ON
+cmake -S ../audio_codec_common -B build/audio-common -A x64 -DAUDIO_COMMON_BUILD_TESTS=ON
+cmake --build build/audio-common --config Release
+cmake -E chdir build/audio-common ctest -C Release --output-on-failure
+
+cmake -S ../audio_codec_common/math -B build/math -A x64 -DAUDIO_MATH_BUILD_TESTS=ON
 cmake --build build/math --config Release
 cmake -E chdir build/math ctest -C Release --output-on-failure
 
@@ -150,4 +157,4 @@ Win32 allocator 回调保持 `cdecl`；不要用全局 `/Gz` 改变所有 codec 
 
 发布清单记录与维护版逐文件一致的 C/H 源码，以及发布目录专用的构建路径调整。本次构建和自包含测试摘要见 `release_manifest.json`；它不把历史音质评估或历史实机回归重复计为本次运行。
 
-源码快照不含预编译二进制；按目标平台和选项构建。验证过程的对象文件、可执行程序和日志位于发布目录之外，不属于发布内容。
+源码快照不含预编译二进制；按目标平台和选项构建。发布版新增和更新的源码注释使用英文，中文文档保留在 `docs/zh-CN/`。验证过程的对象文件、可执行程序和日志位于发布目录之外，不属于发布内容。

@@ -12,13 +12,13 @@ lhdc_compile_settings(lhdc_ar_common_objects)
 target_compile_definitions(lhdc_ar_common_objects PRIVATE
   LHDC_AR_HIGH_PERFORMANCE_SSE=$<BOOL:${LHDC_AR_HIGH_PERFORMANCE_SSE}>)
 set_target_properties(lhdc_ar_common_objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_include_directories(lhdc_ar_common_objects PRIVATE include "${LHDC_ROOT}/../ar/include")
+target_include_directories(lhdc_ar_common_objects PRIVATE include "${CMAKE_SOURCE_DIR}/ar/include")
 add_library(lhdc_ar STATIC $<TARGET_OBJECTS:lhdc_ar_v4_objects>
   $<TARGET_OBJECTS:lhdc_ar_v5_objects> $<TARGET_OBJECTS:lhdc_ar_common_objects>)
 add_library(lhdc::ar ALIAS lhdc_ar)
 target_include_directories(lhdc_ar PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
-  "${LHDC_ROOT}/../ar/include")
-target_link_libraries(lhdc_ar PUBLIC audio_math::math lhdc_platform lhdc_dsp)
+  "${CMAKE_SOURCE_DIR}/ar/include")
+target_link_libraries(lhdc_ar PUBLIC audio_common::math lhdc_platform lhdc_dsp)
 if(LHDC_BUILD_TESTS)
   add_executable(lhdc_ar_public_api tests/public_api.c)
   lhdc_compile_settings(lhdc_ar_public_api)

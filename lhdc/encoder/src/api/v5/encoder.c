@@ -1,7 +1,7 @@
 #include "../../../../common/include/lhdc_log.h"
 #include "../../../../common/include/lhdc_alignment.h"
-#include "../../../../../math/include/audio_math/byte_order.h"
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/byte_order.h>
+#include <audio_math/integer.h>
 #include <audio_math/float_convert.h>
 
 #ifndef _GNU_SOURCE

@@ -1,6 +1,6 @@
 #include "../../../include/lhdc/decoder/status.h"
 #include "../../../../common/include/lhdc_alignment.h"
-#include "../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #include "../../common/lhdc_decoder_log.h"
 #include "include/decoder_state.h"
 #include "../../v5/include/lhdc_workspace_layout.h"

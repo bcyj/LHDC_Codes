@@ -6,7 +6,7 @@
 #define LHDC_BT_USE_AOSP_REFERENCE 0
 #endif
 #if !LHDC_BT_USE_AOSP_REFERENCE
-#include "../../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #endif
 
 #if LHDC_BT_USE_AOSP_REFERENCE

@@ -1,6 +1,6 @@
 #include "lhdc_version.h"
 #include "include/ar_internal.h"
-#include "../../../../math/include/audio_math/fft_float32.h"
+#include <audio_math/fft_float32.h>
 #include <string.h>
 
 /* Interleave previous and current frames into complex FFT input and advance frame history. */

@@ -1,4 +1,4 @@
-#include "../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #include "../../../include/lhdc/decoder/status.h"
 #include "../include/lhdc_arith.h"
 #include "../include/lhdc_dec_control.h"
@@ -6,7 +6,7 @@
 #include "../include/lhdc_tables.h"
 #include <stdbool.h>
 #include <audio_math/bits.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #if defined(_KERNEL_MODE) && defined(_MSC_VER) && defined(_M_IX86)
 #include <audio_math/float_convert.h>
 #endif

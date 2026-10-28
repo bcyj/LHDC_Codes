@@ -12,8 +12,9 @@ This document describes the distributed sources. Public headers define the inter
 | Decoder | V4 LHDC/LLAC and V5 lossy parsing, spectral reconstruction, synthesis, and PCM output | `lhdc::decoder` | `<lhdc/decoder/decoder.h>` |
 | Generic PCM interface | Format description, workspace binding, backend dispatch, parameter forwarding | `audio_ar::ar` | `<ar/pcm.h>`, `<ar/backend.h>` |
 | LHDC AR | Upmix, distance gain, reverb, HRIR convolution, binaural positioning | `lhdc::ar` | `<ar/lhdc_pcm.h>`, `<lhdc/ar/pcm_backend.h>` |
-| Mathematics | Floating FFT, FMA, classification, conversion, rounding, scaling, software math | `audio_math::math` | `<audio_math/...>` |
-| LHDC infrastructure | Instance memory, ring buffers, fixed FFT, DCT-IV, protocol tables | `lhdc::common`, `lhdc::dsp` | Dependencies propagate through component targets |
+| Shared mathematics | Floating FFT, FMA, classification, conversion, rounding, scaling, software math | `audio_common::math` | `<audio_math/...>` |
+| Shared core | Allocation-free ring buffer | `audio_common::core` | `<audio_common/ring_buffer.h>` |
+| LHDC infrastructure | Instance memory, compatibility ring-buffer adapter, fixed FFT, DCT-IV, protocol tables | `lhdc::common`, `lhdc::dsp` | Dependencies propagate through component targets |
 
 Encoding, decoding, and AR can be combined as needed. AR processes PCM before encoding, after decoding, or in a standalone effects chain.
 
@@ -97,7 +98,9 @@ Different instances isolate audio state. The host serializes configuration, proc
 
 ## Mathematics and transforms
 
-`math/` is independent of LHDC types, allocators, and logs and can serve other codecs. Floating FFT allocates no memory; callers provide input, output, twiddles, and generic-radix scratch. Recursive and optional iterative static schedules are supported. Exact SSE2 butterflies are enabled by default on supported x86/x64 targets; an optional non-bit-exact split-radix SSE backend remains separate for AR-oriented performance testing.
+The sibling `audio_codec_common/math/` module is independent of LHDC types, allocators, and logs and can serve other codecs. Floating FFT allocates no memory; callers provide input, output, twiddles, and generic-radix scratch. Recursive and optional iterative static schedules are supported. Exact SSE2 butterflies are enabled by default on supported x86/x64 targets; an optional non-bit-exact split-radix SSE backend remains separate for AR-oriented performance testing.
+
+The sibling `audio_codec_common/core/` module provides the allocation-free public ring buffer. LHDC retains only its compatibility API and delegates storage and index operations to the shared implementation.
 
 Shared LHDC DSP adds DCT-IV/fixed FFT. Numeric helpers follow header-defined domains, rounding, saturation, and modular arithmetic. They are not complete C99 `libm` replacements and do not generally reproduce CRT `errno`, exceptions, or arbitrary rounding modes.
 

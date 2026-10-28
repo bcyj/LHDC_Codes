@@ -1,7 +1,7 @@
 #ifndef LHDC_DECODER_SRC_V5_CODEC_SYNTHESIS_H
 #define LHDC_DECODER_SRC_V5_CODEC_SYNTHESIS_H
 #include <stdint.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif

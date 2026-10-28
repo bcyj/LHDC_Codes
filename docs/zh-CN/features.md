@@ -12,8 +12,9 @@
 | 解码器 | V4 LHDC/LLAC、V5 有损帧解析、频谱重建、时域合成及 PCM 写出 | `lhdc::decoder` | `<lhdc/decoder/decoder.h>` |
 | 通用 PCM 接口 | 格式描述、工作区绑定、后端分派及参数传递 | `audio_ar::ar` | `<ar/pcm.h>`、`<ar/backend.h>` |
 | LHDC AR | 上混、距离增益、混响、HRIR 卷积和双耳定位 | `lhdc::ar` | `<ar/lhdc_pcm.h>`、`<lhdc/ar/pcm_backend.h>` |
-| 公共数学 | 浮点 FFT、FMA、浮点分类、转换、取整、缩放及软件数学函数 | `audio_math::math` | `<audio_math/...>` |
-| LHDC 公共设施 | 实例内存、环形缓冲、定点 FFT、DCT-IV 和协议相关表 | `lhdc::common`、`lhdc::dsp` | 组件公开接口自动传递依赖 |
+| 公共数学 | 浮点 FFT、FMA、浮点分类、转换、取整、缩放及软件数学函数 | `audio_common::math` | `<audio_math/...>` |
+| 公共基础组件 | 无动态分配环形缓冲 | `audio_common::core` | `<audio_common/ring_buffer.h>` |
+| LHDC 公共设施 | 实例内存、环形缓冲兼容适配、定点 FFT、DCT-IV 和协议相关表 | `lhdc::common`、`lhdc::dsp` | 组件公开接口自动传递依赖 |
 
 编码器、解码器和 AR 可按需组合。AR 直接处理 PCM，可用于编码前、解码后，或作为独立音效链。
 
@@ -97,7 +98,9 @@ LHDC 后端的约定：
 
 ## 数学与变换
 
-`math/` 不依赖 LHDC 类型、内存分配器或日志，可供其他编码库共用。公共浮点 FFT 不分配内存；调用方提供输入、输出、旋转表和必要的通用基数临时区。支持递归调度，以及可选的非递归静态调度。受支持的 x86/x64 目标默认启用二进制一致 SSE2 蝶形；面向 AR 性能测试的非二进制一致 split-radix SSE 后端保持为独立可选路径。
+同级 `audio_codec_common/math/` 模块不依赖 LHDC 类型、内存分配器或日志，可供其他编码库共用。公共浮点 FFT 不分配内存；调用方提供输入、输出、旋转表和必要的通用基数临时区。支持递归调度，以及可选的非递归静态调度。受支持的 x86/x64 目标默认启用二进制一致 SSE2 蝶形；面向 AR 性能测试的非二进制一致 split-radix SSE 后端保持为独立可选路径。
+
+同级 `audio_codec_common/core/` 模块提供无动态分配的公开环形缓冲实现。LHDC 仅保留兼容接口，存储和索引操作由公共实现完成。
 
 LHDC 公共 DSP 进一步提供 DCT-IV 与定点 FFT。数值函数按头文件规定处理范围、舍入、饱和或模运算，不作为完整 C99 `libm` 替代品，也不统一保证 CRT 的 `errno`、浮点异常标志或任意舍入模式。
 

@@ -1,6 +1,6 @@
 #include "../../../include/lhdc/decoder/status.h"
 #include <audio_math/bits.h>
-#include "../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #include "../include/lhdc_arith.h"
 
 /* Recompute cumulative boundaries and thresholds from frequencies, preserving 32-bit product truncation. */
@@ -153,7 +153,7 @@ int lhdc_dec_arith_stop(dec_arith_struct *dec_arith, unsigned *bindata) {
     return LHDC_V5_DEC_ARITH_TAIL_BITS_LONG;
 }
 #include <audio_math/bits.h>
-#include "../../../../../math/include/audio_math/byte_order.h"
+#include <audio_math/byte_order.h>
 #include "../include/lhdc_dec.h"
 #include <string.h>
 

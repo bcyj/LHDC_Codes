@@ -2,7 +2,7 @@
 #include "../../../include/lhdc/decoder/status.h"
 #include <audio_math/constants.h>
 #include <audio_math/numeric_bits.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #include "../include/lhdc_tables.h"
 #include <string.h>
 #include <limits.h>

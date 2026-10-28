@@ -1,5 +1,5 @@
 #include <audio_math/bits.h>
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #include "../include/lhdc_dec_core.h"
 #include <string.h>
 

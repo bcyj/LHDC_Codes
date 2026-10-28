@@ -1,5 +1,5 @@
-#include "../../../math/include/audio_math/integer.h"
-#include "../../../math/include/audio_math/byte_order.h"
+#include <audio_math/integer.h>
+#include <audio_math/byte_order.h>
 #include "../include/dsp/float_compat.h"
 #include <audio_math/bits.h>
 #include <stdio.h>

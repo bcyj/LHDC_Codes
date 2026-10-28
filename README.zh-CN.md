@@ -4,7 +4,7 @@
 
 本页保留原中文说明。本轮发布版已将源码注释翻译为英文，运算代码保持不变；最新翻译与验证范围见[源码翻译与验证](docs/zh-CN/source-language.md)。
 
-本项目包含 V4/V5 编码器、V4/V5 解码器、AR PCM 效果器，以及可单独使用的公共数学模块。支持 Windows Win32/x64 和 Android ARM32/ARM64 构建，三个音频组件可独立选择或组合使用。
+本项目包含 V4/V5 编码器、V4/V5 解码器和 AR PCM 效果器，并引用同级 `audio_codec_common` 仓库中的公共数学库及无动态分配环形缓冲实现。支持 Windows Win32/x64 和 Android ARM32/ARM64 构建，三个音频组件可独立选择或组合使用。
 
 此库本质上是我为我另一个开源A2DP驱动项目所制造的，大量参考了AOSP中相关的蓝牙编码算法以及WillyBilly06的LHDCv5库，在多个耳机中测试通过，由于找不到LHDC v1的耳机，所以不支持v1, 以后会补上。过程中大量使用Gemini和ChatGPT生成代码，文档、注释全部用Gemini和ChatGPT生成和翻译，等我有时间再手动校对。
 
@@ -16,21 +16,22 @@
 - [性能优化说明](docs/zh-CN/performance-optimizations.md)：默认二进制一致加速及可选高性能路径。
 
 ```text
-lhdc_codes_release/
-├─ CMakeLists.txt             组件组合与测试入口
-├─ lhdc_windows.sln           Windows 编码器及 AR 的 MSBuild 入口
-├─ lhdc/
-│  ├─ encoder/                V4/V5 编码器及跨平台 BT 适配
-│  ├─ decoder/                V4/V5 解码器
-│  ├─ ar/                     LHDC AR 效果算法及配置接口
-│  ├─ common/                 共享内存、缓冲区、变换及专用数值实现
-│  └─ platform/               Android、Windows、ARM、x86 适配
-├─ math/                      独立公共 C 数学库
-├─ ar/                        通用 PCM 效果后端接口
-├─ cmake/                     构建和资源选项
-├─ tests/integration/         自包含的组件及实例测试
-├─ tools/                     Android 构建及源码清单检查工具
-└─ docs/                      当前功能与构建说明
+bt_codes/
+├─ audio_codec_common/        公共数学库与无动态分配基础组件
+└─ lhdc_codes/
+   ├─ CMakeLists.txt          组件组合与测试入口
+   ├─ lhdc_windows.sln        Windows 编码器及 AR 的 MSBuild 入口
+   ├─ lhdc/
+   │  ├─ encoder/             V4/V5 编码器及跨平台 BT 适配
+   │  ├─ decoder/             V4/V5 解码器
+   │  ├─ ar/                  LHDC AR 效果算法及配置接口
+   │  ├─ common/              编解码专用内存、变换及数值实现
+   │  └─ platform/            Android、Windows、ARM、x86 适配
+   ├─ ar/                     通用 PCM 效果后端接口
+   ├─ cmake/                  构建和资源选项
+   ├─ tests/integration/      自包含的组件及实例测试
+   ├─ tools/                  Android 构建及源码清单检查工具
+   └─ docs/                   当前功能与构建说明
 ```
 
 在本目录打开终端，可先构建 Windows x64：

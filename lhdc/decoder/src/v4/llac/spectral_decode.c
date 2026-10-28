@@ -5,7 +5,7 @@
 #include "../include/llac_semantic_records.h"
 #include "tables/llac_decode_keys.h"
 /* Pair model frequency rows with encrypted cumulative boundaries; preserve every word's bit pattern. */
-#include "../../../../../math/include/audio_math/integer.h"
+#include <audio_math/integer.h>
 #include <stdbool.h>
 #include <string.h>
 #include "spectral_tables.h"

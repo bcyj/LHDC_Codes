@@ -7,6 +7,7 @@ Measurement date: **2026-10-22**. These figures are preserved from the previousl
 ## Measurement scope
 
 - Report V4 encoding, V5 encoding, V4 decoding, V5 decoding, AR, and mathematics separately. V4 includes LLAC; encoding includes the respective BT wrapper.
+- Mathematics now resides in the sibling `audio_codec_common` repository; the preserved measurements still describe the same shared implementation.
 - Shared mathematics, DSP, memory/buffers, and platform support are separate, without repeated attribution to codecs. Static archives exclude external dependencies.
 - Static sections precede selective extraction, COMDAT folding, and dead-code elimination; they are not final EXE/DLL/SYS size increments.
 - Writable data includes initialized data/BSS, excluding instance workspace, heap, stack, loader-page alignment, and system CRT. Query instance storage through public interfaces.

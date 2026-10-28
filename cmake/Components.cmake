@@ -25,7 +25,7 @@ function(lhdc_sources out component version)
 endfunction()
 
 function(lhdc_compile_settings target)
-  target_link_libraries(${target} PRIVATE audio_math::math)
+  target_link_libraries(${target} PRIVATE audio_common::core audio_common::math)
   target_compile_definitions(${target} PRIVATE LHDC_ENABLE_LOGGING=$<BOOL:${LHDC_ENABLE_LOGGING}>)
   target_compile_features(${target} PRIVATE c_std_11)
   if(MSVC)
@@ -59,7 +59,7 @@ function(lhdc_version_objects target version)
   endif()
   target_include_directories(${target} PRIVATE "${LHDC_ROOT}/common/include"
     "${LHDC_ROOT}/platform/include" "${LHDC_ROOT}/ar/src/core/include"
-    "${LHDC_ROOT}/ar/include" "${LHDC_ROOT}/../ar/include")
+    "${LHDC_ROOT}/ar/include" "${CMAKE_SOURCE_DIR}/ar/include")
   set(namespace "${LHDC_ROOT}/common/include/lhdc_data_namespace.h")
   if(MSVC)
     target_compile_options(${target} PRIVATE "/FI${namespace}")

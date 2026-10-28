@@ -217,33 +217,6 @@
     <Filter Include="lhdc\platform\x86\include">
       <UniqueIdentifier>{BF759640-D1C4-5FA5-BA98-44479C1042FF}</UniqueIdentifier>
     </Filter>
-    <Filter Include="math">
-      <UniqueIdentifier>{EFFF6615-41E4-5AA9-A57F-89BEAB8B6809}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include">
-      <UniqueIdentifier>{2ED2FA4C-13A0-5290-A3E2-FF76893F8D1F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math">
-      <UniqueIdentifier>{3DAE88FE-A0C5-590B-A90D-25604B3F87B3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\platform">
-      <UniqueIdentifier>{9836054A-AD94-54DE-9239-4ABF40CAA67C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\platform\android">
-      <UniqueIdentifier>{57E0D86D-CB14-560D-9707-66276EF2799E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\platform\arm">
-      <UniqueIdentifier>{81ECBF17-66CD-5E4E-A1C1-65D6C050923F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\platform\windows">
-      <UniqueIdentifier>{60A3485A-AA44-5E03-BF99-857070BEF296}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\platform\x86">
-      <UniqueIdentifier>{8CA71055-DDAE-5B45-BAE8-60E4EFE94A34}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="math\include\audio_math\types">
-      <UniqueIdentifier>{D322FAE7-C3B5-5E78-8636-7C96653DC667}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\lhdc\common\src\dsp\fft_float32.c">
@@ -337,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\lhdc\ar\src\common\vbap_angle.h">
       <Filter>lhdc\ar\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_fft_backend.h">
+      <Filter>lhdc\ar\src\core\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\lhdc\ar\src\core\include\ar_interfaces.h">
       <Filter>lhdc\ar\src\core\include</Filter>
@@ -530,6 +506,9 @@
     <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\llac\llac_const.h">
       <Filter>lhdc\encoder\src\v4\include\llac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\llac\spectral_coding.h">
+      <Filter>lhdc\encoder\src\v4\include\llac</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\lhdc\encoder\src\v4\include\types\cirbuf.h">
       <Filter>lhdc\encoder\src\v4\include\types</Filter>
     </ClInclude>
@@ -670,123 +649,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\lhdc\platform\x86\include\lhdc_x86_smoothing.h">
       <Filter>lhdc\platform\x86\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\bits.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\byte_order.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\compiler.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\constants.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\fft_float32.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\fft_float32_tables.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_convert.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_exp.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_log.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_mdct.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_properties.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_remainder.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_rounding.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_scaling.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_sine.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_sqrt.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_trig.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_trig_q31.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\float_window.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\fma_native.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\fma_soft.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\integer.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\math.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\numeric_bits.h">
-      <Filter>math\include\audio_math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\android\fma.h">
-      <Filter>math\include\audio_math\platform\android</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\android\math.h">
-      <Filter>math\include\audio_math\platform\android</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\fma.h">
-      <Filter>math\include\audio_math\platform\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\properties.h">
-      <Filter>math\include\audio_math\platform\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\rounding.h">
-      <Filter>math\include\audio_math\platform\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\arm\sqrt.h">
-      <Filter>math\include\audio_math\platform\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\fma.h">
-      <Filter>math\include\audio_math\platform</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\constants.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\crt.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\exp_log.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\remainder.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\tables.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\windows\trig.h">
-      <Filter>math\include\audio_math\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\platform\x86\sqrt.h">
-      <Filter>math\include\audio_math\platform\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\math\include\audio_math\types\fma.h">
-      <Filter>math\include\audio_math\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\ar\include\ar\backend.h">
       <Filter>ar\include\ar</Filter>
